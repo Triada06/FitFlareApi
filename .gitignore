@@ -1,0 +1,79 @@
+# --- OS / General ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+desktop.ini
+
+# --- Node / React ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env
+
+# --- Build Output ---
+dist/
+build/
+
+# --- TypeScript ---
+*.tsbuildinfo
+
+# --- VSCode ---
+.vscode/
+.history/
+.code-workspace
+
+# --- JetBrains IDEs (Rider/WebStorm) ---
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# --- ASP.NET / .NET ---
+bin/
+obj/
+out/
+project.lock.json
+project.fragment.lock.json
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ASP.NET Secrets
+secrets.json
+
+# Entity Framework Migrations Snapshot
+*Migrations/*.Designer.cs
+*Migrations/*.resx
+
+# --- Logs / Reports ---
+*.log
+logs/
+*.tlog
+*.coverage
+*.coveragexml
+TestResults/
+*.ncrunch*
+*.vshost.*
+*.dbmdl
+
+# --- Publish / Deployment ---
+publish/
+wwwroot/
+
+# --- Azure ---
+*.azure-pipelines.yml
+*.publishsettings
+
+# --- Misc ---
+*.bak
+*.tmp
+*.swp
+*.swo

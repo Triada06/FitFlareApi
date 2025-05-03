@@ -1,0 +1,17 @@
+﻿namespace FitFlare.Api.Helpers;
+
+public static class ApiEndPoints
+{
+    private const string ApiBase = "api";
+
+    public static class AppUser
+    {
+        private const string Base = $"{ApiBase}/appuser";
+        public const string SignIn = $"{Base}/signin";
+        public const string SignUp = $"{Base}/signup";
+        public const string GetAll = $"{Base}";
+        public const string GetById = $"{Base}/{{id}}";
+        public const string Delete = $"{Base}/{{id}}";
+        public const string Update = $"{Base}/{{id}}";
+    }
+}
