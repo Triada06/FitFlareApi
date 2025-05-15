@@ -24,7 +24,7 @@ public static class AppUserMapping
     {
         appUser.FullName = userToMap.FullName;
         appUser.UserName = userToMap.UserName;
-        appUser.ProfilePicture = profilePicture ?? appUser.ProfilePicture;
+        appUser.ProfilePictureUri = profilePicture ?? appUser.ProfilePictureUri;
 
         return appUser;
     }
@@ -36,7 +36,7 @@ public static class AppUserMapping
             FullName = userToMap.FullName,
             UserName = userToMap.UserName,
             Email = userToMap.Email,
-            ProfilePicture = $"{Guid.NewGuid()} - {profilePicture}",
+            ProfilePictureUri = $"{Guid.NewGuid()} - {profilePicture}",
         };
     }
 }

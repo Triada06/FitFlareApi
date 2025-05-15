@@ -58,8 +58,6 @@ public class BlobService : IBlobService
         };
         await blobClient.UploadAsync(file.OpenReadStream(), headers);
     }
-
-
     public string GetBlobSasUri(string blobName, int expiryMinutes = 10)
     {
         var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
@@ -85,25 +83,4 @@ public class BlobService : IBlobService
         var blobClient = containerClient.GetBlobClient(blobName);
         await blobClient.DeleteIfExistsAsync();
     }
-    // private string GenerateSasUrl(BlobClient blobClient)
-    // {
-    //     var expiry = DateTimeOffset.UtcNow.AddHours(1);
-    //     var sasBuilder = new BlobSasBuilder
-    //     {
-    //         BlobContainerName = blobClient.BlobContainerName,
-    //         BlobName = blobClient.Name,
-    //         Resource = "b",
-    //         ExpiresOn = expiry
-    //     };
-    //
-    //     sasBuilder.SetPermissions(BlobSasPermissions.Read);
-    //
-    //     var sasToken = sasBuilder.ToSasQueryParameters(
-    //         new StorageSharedKeyCredential(
-    //             _configuration["Azure:AccountName"],
-    //             _configuration["Azure:AccountKey"]
-    //         )).ToString();
-    //
-    //     return $"{blobClient.Uri}?{sasToken}";
-    // }
 }

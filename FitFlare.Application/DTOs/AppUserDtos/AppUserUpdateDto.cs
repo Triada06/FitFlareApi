@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Http;
 
+
 namespace FitFlare.Application.DTOs.AppUserDTos;
 
 public class AppUserUpdateDto

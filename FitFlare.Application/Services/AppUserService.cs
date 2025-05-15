@@ -29,8 +29,8 @@ public class AppUserService(IAppUserRepository repository, IBlobService blobServ
         if (appUser.ProfilePicture != null)
         {
             appUser.MapToAppUser(user, appUser.ProfilePicture.FileName);
-            if (user.ProfilePicture != null)
-                await blobService.DeleteBlobAsync(user.ProfilePicture);
+            if (user.ProfilePictureUri != null)
+                await blobService.DeleteBlobAsync(user.ProfilePictureUri);
 
             await blobService.UploadBlobAsync(appUser.ProfilePicture, appUser.ProfilePicture.FileName);
             await repository.UpdateAsync(user);
@@ -53,10 +53,10 @@ public class AppUserService(IAppUserRepository repository, IBlobService blobServ
         if (appUser.ProfilePicture != null)
         {
             user = appUser.MapToAppUser(appUser.ProfilePicture.FileName);
-            await blobService.UploadBlobAsync(appUser.ProfilePicture, user.ProfilePicture);
+            await blobService.UploadBlobAsync(appUser.ProfilePicture, user.ProfilePictureUri);
             await repository.CreateAsync(user);
             await userManager.AddPasswordAsync(user, appUser.PassWord);
-            string profilePictureUri = blobService.GetBlobSasUri(user.ProfilePicture);
+            string profilePictureUri = blobService.GetBlobSasUri(user.ProfilePictureUri);
             return user.MapToAppUserDto(profilePictureUri);
         }
 
@@ -71,8 +71,8 @@ public class AppUserService(IAppUserRepository repository, IBlobService blobServ
         var user = await repository.GetByIdAsync(userId);
         if (user == null)
             throw new UserNotFoundException();
-        if (!string.IsNullOrWhiteSpace(user.ProfilePicture))
-            await blobService.DeleteBlobAsync(user.ProfilePicture);
+        if (!string.IsNullOrWhiteSpace(user.ProfilePictureUri))
+            await blobService.DeleteBlobAsync(user.ProfilePictureUri);
         return await repository.DeleteAsync(user);
     }
 
@@ -83,9 +83,9 @@ public class AppUserService(IAppUserRepository repository, IBlobService blobServ
         if (user == null)
             throw new UserNotFoundException();
 
-        if (!string.IsNullOrWhiteSpace(user.ProfilePicture))
+        if (!string.IsNullOrWhiteSpace(user.ProfilePictureUri))
         {
-            string profilePictureUri = blobService.GetBlobSasUri(user.ProfilePicture);
+            string profilePictureUri = blobService.GetBlobSasUri(user.ProfilePictureUri);
             return user.MapToAppUserDto(profilePictureUri);
         }
 
@@ -105,8 +105,7 @@ public class AppUserService(IAppUserRepository repository, IBlobService blobServ
             .Include(au => au.Following)
             .Include(au => au.Followers)
             .Include(au => au.CommentLikes)
-            .Include(au => au.Comments)
-            .Include(au => au.Ratings);
+            .Include(au => au.Comments);
 
         var users = await repository.GetAllAsync(page, pageSize, tracking, includeFunc);
         users = users.ToList();
@@ -135,9 +134,9 @@ public class AppUserService(IAppUserRepository repository, IBlobService blobServ
 
         foreach (var user in sorted)
         {
-            if (!string.IsNullOrWhiteSpace(user.ProfilePicture))
+            if (!string.IsNullOrWhiteSpace(user.ProfilePictureUri))
             {
-                var uri = blobService.GetBlobSasUri(user.ProfilePicture);
+                var uri = blobService.GetBlobSasUri(user.ProfilePictureUri);
                 rerDtos.Add(user.MapToAppUserDto(uri));
             }
             else
@@ -159,9 +158,9 @@ public class AppUserService(IAppUserRepository repository, IBlobService blobServ
         if (!appUsers.Any()) return returnDtos;
         foreach (var appUser in appUsers)
         {
-            if (!string.IsNullOrWhiteSpace(appUser.ProfilePicture))
+            if (!string.IsNullOrWhiteSpace(appUser.ProfilePictureUri))
             {
-                var uri = blobService.GetBlobSasUri(appUser.ProfilePicture);
+                var uri = blobService.GetBlobSasUri(appUser.ProfilePictureUri);
                 returnDtos.Add(appUser.MapToAppUserDto(uri));
             }
             else
