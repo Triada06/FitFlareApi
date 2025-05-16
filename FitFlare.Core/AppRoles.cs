@@ -1,4 +1,4 @@
-﻿namespace FitFlare.Api.Helpers;
+﻿namespace FitFlare.Core;
 
 public enum AppRoles
 {

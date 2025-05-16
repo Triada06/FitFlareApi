@@ -1,17 +1,29 @@
-﻿using System.Linq.Expressions;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Linq.Expressions;
+using System.Security.Claims;
+using System.Text;
+using FitFlare.Application.Contracts.Responses;
 using FitFlare.Application.DTOs.AppUserDTos;
 using FitFlare.Application.Helpers.Exceptions;
 using FitFlare.Application.Mappings;
 using FitFlare.Application.Services.Interfaces;
+using FitFlare.Core;
 using FitFlare.Core.Entities;
 using FitFlare.Infrastructure.Repositories.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace FitFlare.Application.Services;
 
-public class AppUserService(IAppUserRepository repository, IBlobService blobService, UserManager<AppUser> userManager)
+public class AppUserService(
+    IAppUserRepository repository,
+    IBlobService blobService,
+    UserManager<AppUser> userManager,
+    IConfiguration config)
     : IAppUserService
 {
     public async Task<bool> UpdateAsync(AppUserUpdateDto appUser, string userId)
@@ -41,7 +53,7 @@ public class AppUserService(IAppUserRepository repository, IBlobService blobServ
         return await repository.UpdateAsync(user);
     }
 
-    public async Task<AppUserDto> CreateAsync(AppUserCreateDto appUser)
+    public async Task<AuthResponse> SignUpAsync(AppUserSignUpDto appUser)
     {
         var template = appUser.UserName.Trim();
         var isExists = await repository.AnyAsync(u =>
@@ -54,16 +66,44 @@ public class AppUserService(IAppUserRepository repository, IBlobService blobServ
         {
             user = appUser.MapToAppUser(appUser.ProfilePicture.FileName);
             await blobService.UploadBlobAsync(appUser.ProfilePicture, user.ProfilePictureUri);
-            await repository.CreateAsync(user);
+            var result = await userManager.CreateAsync(user);
+
+            if (!result.Succeeded)
+                throw new InternalServerErrorException();
+            await userManager.AddToRoleAsync(user, nameof(AppRoles.Member)); 
             await userManager.AddPasswordAsync(user, appUser.PassWord);
             string profilePictureUri = blobService.GetBlobSasUri(user.ProfilePictureUri);
-            return user.MapToAppUserDto(profilePictureUri);
+            return new AuthResponse
+            {
+                ExpireTime = DateTime.UtcNow.AddDays(7),
+                Token = await GenerateJwtToken(user),
+                UserDto = user.MapToAppUserDto(profilePictureUri),
+            };
         }
 
         user = appUser.MapToAppUser();
-        if (!await repository.CreateAsync(user)) throw new InternalServerErrorException();
+        var res = await userManager.CreateAsync(user);
+        if (!res.Succeeded) throw new InternalServerErrorException();
+        await userManager.AddToRoleAsync(user, nameof(AppRoles.Member)); 
         await userManager.AddPasswordAsync(user, appUser.PassWord);
-        return user.MapToAppUserDto();
+        return new AuthResponse
+        {
+            ExpireTime = DateTime.UtcNow.AddDays(7),
+            Token = await GenerateJwtToken(user),
+            UserDto = user.MapToAppUserDto()
+        };
+    }
+
+    public async Task<string> SignInAsync(AppUserSignInDto appUserDto)
+    {
+        var user = await userManager.FindByEmailAsync(appUserDto.EmailOrUserName)
+                   ?? await userManager.FindByNameAsync(appUserDto.EmailOrUserName);
+        if (user is null)
+            throw new UserNotFoundException();
+        var result = await userManager.CheckPasswordAsync(user, appUserDto.PassWord);
+        if (!result)
+            throw new InvalidLoginCredentialsException();
+        return await GenerateJwtToken(user);
     }
 
     public async Task<bool> DeleteAsync(string userId)
@@ -170,5 +210,37 @@ public class AppUserService(IAppUserRepository repository, IBlobService blobServ
         }
 
         return returnDtos;
+    }
+
+    private async Task<string> GenerateJwtToken(AppUser user)
+    {
+        var roles = await userManager.GetRolesAsync(user);
+
+        var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id)
+        };
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = DateTime.UtcNow.AddHours(3),
+            SigningCredentials = creds,
+            Issuer = config["Jwt:Issuer"],
+            Audience = config["Jwt:Audience"]
+        };
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        var jwt = tokenHandler.WriteToken(token);
+
+        return jwt;
     }
 }

@@ -29,7 +29,7 @@ public static class AppUserMapping
         return appUser;
     }
 
-    public static AppUser MapToAppUser(this AppUserCreateDto userToMap, string? profilePicture = null)
+    public static AppUser MapToAppUser(this AppUserSignUpDto userToMap, string? profilePicture = null)
     {
         return new AppUser
         {

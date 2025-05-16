@@ -2,12 +2,16 @@
 using FitFlare.Application.DTOs.AppUserDTos;
 using FitFlare.Application.Services;
 using FitFlare.Application.Services.Interfaces;
+using FitFlare.Core;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FitFlare.Api.Controllers;
 
+[Authorize(Roles = "Member,Admin,Owner")]
 [ApiController]
-public class AppUserController(IAppUserService appUserService) : ControllerBase
+public class AppUserController(IAppUserService appUserService, RoleManager<IdentityRole> roleManager) : ControllerBase
 {
     [HttpGet(ApiEndPoints.AppUser.GetById)]
     public async Task<IActionResult> GetById([FromRoute] string id)
@@ -17,12 +21,22 @@ public class AppUserController(IAppUserService appUserService) : ControllerBase
         return Ok(result);
     }
 
+    [AllowAnonymous]
     [HttpPost(ApiEndPoints.AppUser.SignUp)]
-    public async Task<IActionResult> SignUp([FromForm] AppUserCreateDto request)
+    public async Task<IActionResult> SignUp([FromForm] AppUserSignUpDto request)
     {
-        var userDto = await appUserService.CreateAsync(request);
-        return CreatedAtAction(nameof(GetById), new { id = userDto.Id }, userDto);
+        var res = await appUserService.SignUpAsync(request);
+        return CreatedAtAction(nameof(GetById), new { id = res.UserDto.Id }, res);
     }
+
+    [AllowAnonymous]
+    [HttpPost(ApiEndPoints.AppUser.SignIn)]
+    public async Task<IActionResult> SignIn([FromBody] AppUserSignInDto request)
+    {
+        var token = await appUserService.SignInAsync(request);
+        return Ok(token);
+    }
+
 
     [HttpGet(ApiEndPoints.AppUser.GetAll)]
     public async Task<IActionResult> GetAll(
@@ -48,4 +62,18 @@ public class AppUserController(IAppUserService appUserService) : ControllerBase
         var res = await appUserService.UpdateAsync(request, id);
         return Ok();
     }
+
+
+    /*
+    [HttpPost("api/addroles")]
+    public async Task<IActionResult> CreateRole()
+     {
+         foreach (var role in Enum.GetValues(typeof(AppRoles)))
+         {
+             if (!await roleManager.RoleExistsAsync(role.ToString()))
+                 await roleManager.CreateAsync(new IdentityRole(role.ToString()));
+         }
+
+         return Ok();
+     }*/
 }

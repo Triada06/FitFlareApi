@@ -14,11 +14,11 @@
       <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
       <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.15" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.10.0" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Contracts\Requests\" />
-      <Folder Include="Contracts\Responses\" />
     </ItemGroup>
 
     <ItemGroup>

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace FitFlare.Application.DTOs.AppUserDTos;
 
-public class AppUserCreateDto
+public class AppUserSignUpDto
 {
     public string? FullName { get; set; }
     public required string UserName { get; set; }
@@ -13,7 +13,7 @@ public class AppUserCreateDto
     public IFormFile? ProfilePicture { get; set; }
 }
 
-public class AppUserCreateValidator : AbstractValidator<AppUserCreateDto>
+public class AppUserCreateValidator : AbstractValidator<AppUserSignUpDto>
 {
     public AppUserCreateValidator()
     {

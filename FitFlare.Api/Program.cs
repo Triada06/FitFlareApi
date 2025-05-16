@@ -1,3 +1,4 @@
+using System.Text;
 using Azure.Storage.Blobs;
 using DotNetEnv;
 using FitFlare.Api;
@@ -10,8 +11,11 @@ using FitFlare.Infrastructure.Repositories;
 using FitFlare.Infrastructure.Repositories.Interfaces;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 Env.Load(); // Load .env file at startup
 
@@ -28,6 +32,7 @@ if (string.IsNullOrWhiteSpace(blobContainer))
 builder.Services.Configure<BlobStorageOptions>(options =>
     options.ContainerName = Environment.GetEnvironmentVariable("BLOB_CONTAINER_NAME")
 );
+
 // CORS Policy
 builder.Services.AddCors(options =>
 {
@@ -41,7 +46,33 @@ builder.Services.AddCors(options =>
 
 // Swagger & API
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(opt =>
+{
+    opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Auth header using Bearer scheme. Example: 'Bearer {token}'",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
 
 // Dependency Injection (split later into static if you want)
 builder.Services.AddSingleton(_ => new BlobServiceClient(blobConn));
@@ -53,7 +84,7 @@ builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
 
 // Validation
 builder.Services.AddExceptionHandler<GlobalExceptionHandlerMiddleware>();
-builder.Services.AddProblemDetails(); 
+builder.Services.AddProblemDetails();
 builder.Services.AddFluentValidationAutoValidation();
 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
     builder.Services.AddValidatorsFromAssembly(assembly);
@@ -64,23 +95,40 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // Identity Config
-builder.Services.AddIdentity<AppUser, IdentityRole>(opts => opts.SignIn.RequireConfirmedAccount = false)
+builder.Services.AddIdentityCore<AppUser>(options =>
+    {
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireNonAlphanumeric = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequiredLength = 8;
+        options.Password.RequiredUniqueChars = 1;
+
+        options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+        options.User.RequireUniqueEmail = true;
+    })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.Configure<IdentityOptions>(options =>
-{
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireNonAlphanumeric = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequiredLength = 8;
-    options.Password.RequiredUniqueChars = 1;
 
-    options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
-    options.User.RequireUniqueEmail = true;
-    options.SignIn.RequireConfirmedEmail = false;
-});
+var jwtSettings = config.GetSection("Jwt");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]))
+        };
+    });
+
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
@@ -102,8 +150,8 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseHttpsRedirection();
-app.MapControllers();
 app.UseExceptionHandler();
+app.MapControllers();
 
 app.Run();
 return;

@@ -1,10 +1,12 @@
 ﻿using FitFlare.Api.Helpers;
 using FitFlare.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FitFlare.Api.Controllers.AdminControllers;
 
 [ApiController]
+[Authorize(Roles = "Admin")]
 public class UserController(IAppUserService appUserService) : ControllerBase
 {
     [HttpGet(ApiEndPointsAdmin.AppUser.GetAll)]
