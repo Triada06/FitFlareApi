@@ -1,4 +1,5 @@
 ﻿using FitFlare.Application.DTOs.AppUserDTos;
+using FitFlare.Application.DTOs.Posts;
 using FitFlare.Core.Entities;
 using Microsoft.AspNetCore.Identity;
 
@@ -6,17 +7,18 @@ namespace FitFlare.Application.Mappings;
 
 public static class AppUserMapping
 {
-    public static AppUserDto MapToAppUserDto(this AppUser appUser, string? profilePictureUri = null)
+    public static AppUserDto MapToAppUserDto(this AppUser appUser,string? profilePictureUri = null,IEnumerable<PostDto?>? posts = null )
     {
         return new AppUserDto
         {
             Id = appUser.Id,
-            Email = appUser.Email,
+            Email = appUser.Email!,
             FullName = appUser.FullName,
-            UserName = appUser.UserName,
+            UserName = appUser.UserName!,
             IsBanned = appUser.IsBanned,
             PostsCount = appUser.Posts.Count,
             ProfilePictureUri = profilePictureUri ?? profilePictureUri,
+            Posts = posts?.ToList() ?? [],
         };
     }
 

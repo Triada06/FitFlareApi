@@ -2,6 +2,7 @@ using System.Text;
 using Azure.Storage.Blobs;
 using DotNetEnv;
 using FitFlare.Api;
+using FitFlare.Api.Helpers;
 using FitFlare.Application.Helpers;
 using FitFlare.Application.Services;
 using FitFlare.Application.Services.Interfaces;
@@ -76,11 +77,7 @@ builder.Services.AddSwaggerGen(opt =>
 
 // Dependency Injection (split later into static if you want)
 builder.Services.AddSingleton(_ => new BlobServiceClient(blobConn));
-builder.Services.AddScoped<IBlobService, BlobService>();
-
-builder.Services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
-builder.Services.AddScoped<IAppUserService, AppUserService>();
-builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
+builder.Services.AddAppServices();
 
 // Validation
 builder.Services.AddExceptionHandler<GlobalExceptionHandlerMiddleware>();

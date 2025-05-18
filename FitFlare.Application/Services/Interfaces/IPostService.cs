@@ -17,6 +17,6 @@ public interface IPostService
     public Task<IEnumerable<PostDto>> GetAll(int page, string? sort, int pageSize = 5, bool tracking = true,
         string? searchText = null);
 
-    public Task<IEnumerable<PostDto?>> Find(Expression<Func<Post, bool>> predicate, Func<IQueryable<Post>,
+    public Task<IEnumerable<PostDto?>> FindAsync(Expression<Func<Post, bool>> predicate, Func<IQueryable<Post>,
         IIncludableQueryable<Post, object>>? include = null, bool tracking = true);
 }

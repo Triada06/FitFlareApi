@@ -4,7 +4,7 @@ namespace FitFlare.Core.Entities;
 
 public class Post : BaseEntity
 {
-    public required string Image { get; set; }
+    public required string Media { get; set; }
     public string? Description { get; set; }
     public int LikeCount { get; set; }
     public required string MediaType { get; set; }

@@ -5,6 +5,7 @@ namespace FitFlare.Application.DTOs.Posts;
 
 public class PostCreateDto
 {
+    public required string UserId { get; set; }
     public string? Description { get; set; }
     public required IFormFile Media { get; set; }
 }
@@ -13,6 +14,9 @@ public class PostDtoValidator : AbstractValidator<PostCreateDto>
 {
     public PostDtoValidator()
     {
+        RuleFor(m => m.UserId)
+            .NotNull().WithMessage("UserId is required")
+            .NotEmpty().WithMessage("UserId is required");
         RuleFor(m => m.Description)
             .NotEmpty().WithMessage("Description is required")
             .NotNull().WithMessage("Description is required")

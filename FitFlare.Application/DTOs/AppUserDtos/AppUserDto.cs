@@ -1,4 +1,6 @@
-﻿namespace FitFlare.Application.DTOs.AppUserDTos;
+﻿using FitFlare.Application.DTOs.Posts;
+
+namespace FitFlare.Application.DTOs.AppUserDTos;
 
 public class AppUserDto
 {
@@ -9,4 +11,5 @@ public class AppUserDto
     public int PostsCount { get; set; }
     public bool IsBanned { get; set; }
     public string? ProfilePictureUri { get; set; }
+    public IEnumerable<PostDto?> Posts { get; set; } = [];
 }

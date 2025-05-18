@@ -5,7 +5,7 @@ namespace FitFlare.Application.DTOs.Posts;
 public class PostDto
 {
     public required string Id { get; set; }
-    public required string Image { get; set; }
+    public required string MediaUri { get; set; }
     public string? Description { get; set; }
     public int LikeCount { get; set; }
     public required string MediaType { get; set; }

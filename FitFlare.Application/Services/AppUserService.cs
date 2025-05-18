@@ -23,6 +23,7 @@ public class AppUserService(
     IAppUserRepository repository,
     IBlobService blobService,
     UserManager<AppUser> userManager,
+    IPostService postService,
     IConfiguration config)
     : IAppUserService
 {
@@ -105,10 +106,12 @@ public class AppUserService(
         if (!string.IsNullOrWhiteSpace(user.ProfilePictureUri))
         {
             string profilePictureUri = blobService.GetBlobSasUri(user.ProfilePictureUri);
-            return user.MapToAppUserDto(profilePictureUri);
+            var userPosts = await postService.FindAsync(p=>p.UserId == user.Id,null,false);
+            return user.MapToAppUserDto(profilePictureUri,userPosts);
         }
 
-        return user.MapToAppUserDto();
+        var posts = await postService.FindAsync(p=>p.UserId == user.Id,null,false);
+        return user.MapToAppUserDto(null,posts);
     }
 
     public async Task<IEnumerable<AppUserDto>> GetAll(

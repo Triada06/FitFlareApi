@@ -1,3 +1,3 @@
 ﻿namespace FitFlare.Application.Helpers.Exceptions;
 
-public class InternalServerErrorException() : Exception("User could not be created.");
+public class InternalServerErrorException() : Exception("Something went wrong, please try again later.");
