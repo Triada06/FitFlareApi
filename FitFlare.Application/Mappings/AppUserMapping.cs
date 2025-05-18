@@ -33,7 +33,6 @@ public static class AppUserMapping
     {
         return new AppUser
         {
-            FullName = userToMap.FullName,
             UserName = userToMap.UserName,
             Email = userToMap.Email,
             ProfilePictureUri = $"{Guid.NewGuid()} - {profilePicture}",

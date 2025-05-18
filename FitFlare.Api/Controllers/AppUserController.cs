@@ -23,7 +23,7 @@ public class AppUserController(IAppUserService appUserService, RoleManager<Ident
 
     [AllowAnonymous]
     [HttpPost(ApiEndPoints.AppUser.SignUp)]
-    public async Task<IActionResult> SignUp([FromForm] AppUserSignUpDto request)
+    public async Task<IActionResult> SignUp([FromBody] AppUserSignUpDto request)
     {
         var res = await appUserService.SignUpAsync(request);
         return CreatedAtAction(nameof(GetById), new { id = res.UserDto.Id }, res);

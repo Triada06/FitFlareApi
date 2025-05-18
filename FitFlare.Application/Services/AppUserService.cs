@@ -61,31 +61,10 @@ public class AppUserService(
         if (isExists)
             throw new UserAlreadyExistsException();
 
-        AppUser user;
-        if (appUser.ProfilePicture != null)
-        {
-            user = appUser.MapToAppUser(appUser.ProfilePicture.FileName);
-            await blobService.UploadBlobAsync(appUser.ProfilePicture, user.ProfilePictureUri);
-            var result = await userManager.CreateAsync(user);
-
-            if (!result.Succeeded)
-                throw new InternalServerErrorException();
-            await userManager.AddToRoleAsync(user, nameof(AppRoles.Member)); 
-            await userManager.AddPasswordAsync(user, appUser.PassWord);
-            string profilePictureUri = blobService.GetBlobSasUri(user.ProfilePictureUri);
-            return new AuthResponse
-            {
-                ExpireTime = DateTime.UtcNow.AddDays(7),
-                Token = await GenerateJwtToken(user),
-                UserDto = user.MapToAppUserDto(profilePictureUri),
-            };
-        }
-
-        user = appUser.MapToAppUser();
-        var res = await userManager.CreateAsync(user);
+        var user = appUser.MapToAppUser();
+        var res = await userManager.CreateAsync(user,appUser.PassWord);
         if (!res.Succeeded) throw new InternalServerErrorException();
         await userManager.AddToRoleAsync(user, nameof(AppRoles.Member)); 
-        await userManager.AddPasswordAsync(user, appUser.PassWord);
         return new AuthResponse
         {
             ExpireTime = DateTime.UtcNow.AddDays(7),
@@ -99,7 +78,7 @@ public class AppUserService(
         var user = await userManager.FindByEmailAsync(appUserDto.EmailOrUserName)
                    ?? await userManager.FindByNameAsync(appUserDto.EmailOrUserName);
         if (user is null)
-            throw new UserNotFoundException();
+            throw new InvalidLoginCredentialsException();
         var result = await userManager.CheckPasswordAsync(user, appUserDto.PassWord);
         if (!result)
             throw new InvalidLoginCredentialsException();
