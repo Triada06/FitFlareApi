@@ -45,7 +45,7 @@ public class AppUserService(
             if (user.ProfilePictureUri != null)
                 await blobService.DeleteBlobAsync(user.ProfilePictureUri);
 
-            await blobService.UploadBlobAsync(appUser.ProfilePicture, appUser.ProfilePicture.FileName);
+            await blobService.UploadBlobAsync(appUser.ProfilePicture, user.ProfilePictureUri!);
             await repository.UpdateAsync(user);
             return true;
         }

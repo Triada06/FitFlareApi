@@ -10,9 +10,9 @@ public class PostCreateDto
     public required IFormFile Media { get; set; }
 }
 
-public class PostDtoValidator : AbstractValidator<PostCreateDto>
+public class PostCreateDtoValidator : AbstractValidator<PostCreateDto>
 {
-    public PostDtoValidator()
+    public PostCreateDtoValidator()
     {
         RuleFor(m => m.UserId)
             .NotNull().WithMessage("UserId is required")

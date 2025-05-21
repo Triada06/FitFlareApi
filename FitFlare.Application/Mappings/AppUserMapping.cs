@@ -7,7 +7,8 @@ namespace FitFlare.Application.Mappings;
 
 public static class AppUserMapping
 {
-    public static AppUserDto MapToAppUserDto(this AppUser appUser,string? profilePictureUri = null,IEnumerable<PostDto?>? posts = null )
+    public static AppUserDto MapToAppUserDto(this AppUser appUser, string? profilePictureUri = null,
+        IEnumerable<PostDto?>? posts = null)
     {
         return new AppUserDto
         {
@@ -19,11 +20,15 @@ public static class AppUserMapping
             PostsCount = appUser.Posts.Count,
             ProfilePictureUri = profilePictureUri ?? profilePictureUri,
             Posts = posts?.ToList() ?? [],
+            FollowersCount = appUser.Followers.Count,
+            FollowingCount = appUser.Followers.Count,
         };
     }
 
     public static AppUser MapToAppUser(this AppUserUpdateDto userToMap, AppUser appUser, string? profilePicture = null)
     {
+        if (profilePicture != null)
+            profilePicture = Guid.NewGuid() + " - " + profilePicture;
         appUser.FullName = userToMap.FullName;
         appUser.UserName = userToMap.UserName;
         appUser.ProfilePictureUri = profilePicture ?? appUser.ProfilePictureUri;
@@ -31,13 +36,12 @@ public static class AppUserMapping
         return appUser;
     }
 
-    public static AppUser MapToAppUser(this AppUserSignUpDto userToMap, string? profilePicture = null)
+    public static AppUser MapToAppUser(this AppUserSignUpDto userToMap)
     {
         return new AppUser
         {
             UserName = userToMap.UserName,
             Email = userToMap.Email,
-            ProfilePictureUri = $"{Guid.NewGuid()} - {profilePicture}",
         };
     }
 }

@@ -11,5 +11,7 @@ public class AppUserDto
     public int PostsCount { get; set; }
     public bool IsBanned { get; set; }
     public string? ProfilePictureUri { get; set; }
+    public int FollowersCount { get; set; }
+    public int FollowingCount { get; set; }
     public IEnumerable<PostDto?> Posts { get; set; } = [];
 }

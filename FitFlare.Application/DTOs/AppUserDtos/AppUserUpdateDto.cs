@@ -9,6 +9,7 @@ public class AppUserUpdateDto
     public string? FullName { get; set; }
     public required string UserName { get; set; }
     public IFormFile? ProfilePicture { get; set; }
+    public string? ProfileDescription { get; set; }
 }
 
 public class AppUserUpdateDtoValidator : AbstractValidator<AppUserUpdateDto>
@@ -21,5 +22,7 @@ public class AppUserUpdateDtoValidator : AbstractValidator<AppUserUpdateDto>
             .NotEmpty().WithMessage("Username must not be empty.")
             .NotNull().WithMessage("UserName must not be empty.")
             .MaximumLength(30).WithMessage("Username must not exceed 30 characters.");
+        RuleFor(model=>model.ProfileDescription)
+            .MaximumLength(200).WithMessage("Profile description must not exceed 200 characters.");
     }
 }
