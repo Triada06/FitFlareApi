@@ -63,9 +63,9 @@ public class AppUserService(
             throw new UserAlreadyExistsException();
 
         var user = appUser.MapToAppUser();
-        var res = await userManager.CreateAsync(user,appUser.PassWord);
+        var res = await userManager.CreateAsync(user, appUser.PassWord);
         if (!res.Succeeded) throw new InternalServerErrorException();
-        await userManager.AddToRoleAsync(user, nameof(AppRoles.Member)); 
+        await userManager.AddToRoleAsync(user, nameof(AppRoles.Member));
         return new AuthResponse
         {
             ExpireTime = DateTime.UtcNow.AddDays(7),
@@ -96,22 +96,23 @@ public class AppUserService(
         return await repository.DeleteAsync(user);
     }
 
-    public async Task<AppUserDto?> GetById(string id,
-        Func<IQueryable<AppUser>, IIncludableQueryable<AppUser, object>>? include = null, bool tracking = true)
+    public async Task<AppUserDto?> GetById(
+        string id,
+        Func<IQueryable<AppUser>, IIncludableQueryable<AppUser, object>>? include = null,
+        bool tracking = true)
     {
-        var user = await repository.GetByIdAsync(id, include, tracking);
-        if (user == null)
-            throw new UserNotFoundException();
+        var user = await repository.GetByIdAsync(id, include, tracking)
+                   ?? throw new UserNotFoundException();
 
-        if (!string.IsNullOrWhiteSpace(user.ProfilePictureUri))
-        {
-            string profilePictureUri = blobService.GetBlobSasUri(user.ProfilePictureUri);
-            var userPosts = await postService.FindAsync(p=>p.UserId == user.Id,null,false);
-            return user.MapToAppUserDto(profilePictureUri,userPosts);
-        }
+        var userPosts = await postService.FindAsync(p => p.UserId == user.Id,
+            include: query => query.Include(m => m.Tags), false);
+        var orderedPosts = userPosts.OrderByDescending(p => p!.PostedWhen).ToList();
 
-        var posts = await postService.FindAsync(p=>p.UserId == user.Id,null,false);
-        return user.MapToAppUserDto(null,posts);
+        var profilePicUri = !string.IsNullOrWhiteSpace(user.ProfilePictureUri)
+            ? blobService.GetBlobSasUri(user.ProfilePictureUri)
+            : null;
+
+        return user.MapToAppUserDto(profilePicUri, orderedPosts);
     }
 
     public async Task<IEnumerable<AppUserDto>> GetAll(
@@ -161,10 +162,7 @@ public class AppUserService(
                 var uri = blobService.GetBlobSasUri(user.ProfilePictureUri);
                 rerDtos.Add(user.MapToAppUserDto(uri));
             }
-            else
-            {
-                rerDtos.Add(user.MapToAppUserDto());
-            }
+            else rerDtos.Add(user.MapToAppUserDto());
         }
 
         return rerDtos;

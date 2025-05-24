@@ -10,5 +10,7 @@ public class PostDto
     public int LikeCount { get; set; }
     public required string MediaType { get; set; }
     public required string PostedById { get; set; }
-    public int CommentCount { get; set; }   
+    public int CommentCount { get; set; }
+    public DateTime PostedWhen { get; set; }
+    public IEnumerable<string>? HashTags { get; set; } 
 }

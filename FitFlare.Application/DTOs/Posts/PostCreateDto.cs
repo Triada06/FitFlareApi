@@ -8,6 +8,7 @@ public class PostCreateDto
     public required string UserId { get; set; }
     public string? Description { get; set; }
     public required IFormFile Media { get; set; }
+    public string[]? HashTags { get; set; } 
 }
 
 public class PostCreateDtoValidator : AbstractValidator<PostCreateDto>

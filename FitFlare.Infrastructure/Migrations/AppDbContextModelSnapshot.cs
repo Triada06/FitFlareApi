@@ -126,7 +126,7 @@ namespace FitFlare.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("FitFlare.Core.Entities.CommentLike", b =>
@@ -151,7 +151,7 @@ namespace FitFlare.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CommentLikes");
+                    b.ToTable("CommentLikes", (string)null);
                 });
 
             modelBuilder.Entity("FitFlare.Core.Entities.Follow", b =>
@@ -177,7 +177,7 @@ namespace FitFlare.Infrastructure.Migrations
                     b.HasIndex("FollowerId", "FollowingId")
                         .IsUnique();
 
-                    b.ToTable("Follows");
+                    b.ToTable("Follows", (string)null);
                 });
 
             modelBuilder.Entity("FitFlare.Core.Entities.Post", b =>
@@ -212,7 +212,7 @@ namespace FitFlare.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Posts");
+                    b.ToTable("Posts", (string)null);
                 });
 
             modelBuilder.Entity("FitFlare.Core.Entities.Story", b =>
@@ -239,7 +239,7 @@ namespace FitFlare.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Stories");
+                    b.ToTable("Stories", (string)null);
                 });
 
             modelBuilder.Entity("FitFlare.Core.Entities.Tag", b =>
@@ -256,7 +256,7 @@ namespace FitFlare.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tag");
+                    b.ToTable("Tag", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -403,7 +403,7 @@ namespace FitFlare.Infrastructure.Migrations
 
                     b.HasIndex("TagsId");
 
-                    b.ToTable("PostTag");
+                    b.ToTable("PostTag", (string)null);
                 });
 
             modelBuilder.Entity("FitFlare.Core.Entities.Comment", b =>

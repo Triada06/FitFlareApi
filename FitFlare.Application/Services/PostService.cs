@@ -37,8 +37,11 @@ public class PostService(IPostRepository postRepository, IBlobService blobServic
         else throw new ContentTypeException();
 
         var mediaFileName = post.Media.FileName + Guid.NewGuid();
-        await blobService.UploadBlobAsync(post.Media,mediaFileName);
+        await blobService.UploadBlobAsync(post.Media, mediaFileName);
         var media = blobService.GetBlobSasUri(mediaFileName);
+
+        List<Tag> tags = [];
+        tags.AddRange(from item in post.HashTags where !string.IsNullOrWhiteSpace(item) select new Tag { Name = item });
 
         var postToCreate = new Post
         {
@@ -46,12 +49,13 @@ public class PostService(IPostRepository postRepository, IBlobService blobServic
             MediaType = mediaType,
             Media = mediaFileName,
             Description = post.Description,
+            Tags = tags,
         };
 
         var res = await postRepository.CreateAsync(postToCreate);
         if (!res)
             throw new InternalServerErrorException();
-        return postToCreate.MapToPostDto(media);
+        return postToCreate.MapToPostDto(media, post.HashTags.ToList());
     }
 
     public Task<bool> DeleteAsync(string userId)
@@ -80,7 +84,10 @@ public class PostService(IPostRepository postRepository, IBlobService blobServic
         if (!posts.Any())
             return returnDtos;
 
-        returnDtos.AddRange(posts.Select(post => post!.MapToPostDto(blobService.GetBlobSasUri(post!.Media))));
+
+        returnDtos.AddRange(posts.Select(post =>
+            post!.MapToPostDto(blobService.GetBlobSasUri(post!.Media),
+                post.Tags.Select(m => m.Name).ToList())));
         return returnDtos;
     }
 }
