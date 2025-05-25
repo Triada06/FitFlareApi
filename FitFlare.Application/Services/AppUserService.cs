@@ -104,7 +104,7 @@ public class AppUserService(
         var user = await repository.GetByIdAsync(id, include, tracking)
                    ?? throw new UserNotFoundException();
 
-        var userPosts = await postService.FindAsync(p => p.UserId == user.Id,
+        var userPosts = await postService.FindAsync(p => p.UserId == user.Id && p.Status =="Published",
             include: query => query.Include(m => m.Tags), false);
         var orderedPosts = userPosts.OrderByDescending(p => p!.PostedWhen).ToList();
 

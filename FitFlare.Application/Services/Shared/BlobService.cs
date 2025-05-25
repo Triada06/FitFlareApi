@@ -1,5 +1,4 @@
-﻿using Azure.Storage;
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
 using FitFlare.Application.DTOs.Blob;
@@ -9,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
-namespace FitFlare.Application.Services;
+namespace FitFlare.Application.Services.Shared;
 
 public class BlobService : IBlobService
 {

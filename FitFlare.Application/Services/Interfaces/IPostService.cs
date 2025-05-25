@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using FitFlare.Application.DTOs.Posts;
 using FitFlare.Core.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Query;
 
 namespace FitFlare.Application.Services.Interfaces;
@@ -19,4 +20,8 @@ public interface IPostService
 
     public Task<IEnumerable<PostDto?>> FindAsync(Expression<Func<Post, bool>> predicate, Func<IQueryable<Post>,
         IIncludableQueryable<Post, object>>? include = null, bool tracking = true);
+    
+    public Task<string> AiAnalyse(PostAnalyseDto dto);
+    public string GetMediaType(string contentType);
+    public Task DeleteDraftedMediaAsync();
 }

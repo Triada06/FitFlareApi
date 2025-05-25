@@ -15,6 +15,7 @@
       <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.15" />
       <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.10.0" />
+      <PackageReference Include="UGemini" Version="0.1.1" />
     </ItemGroup>
 
     <ItemGroup>

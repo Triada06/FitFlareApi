@@ -7,7 +7,8 @@ public class Post : BaseEntity
     public required string Media { get; set; }
     public string? Description { get; set; }
     public int LikeCount { get; set; }
-    public required string MediaType { get; set; }
+    public required string MediaType { get; init; }
+    public required string Status { get; init; }
     
     public string UserId { get; set; }
     public AppUser User { get; set; }

@@ -41,6 +41,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             .Property(m=>m.MediaType).HasMaxLength(5);
         builder.Entity<Post>()
             .Property(m=>m.Description).HasMaxLength(150);
+        builder.Entity<Post>()
+            .Property(m=>m.Status).HasMaxLength(10);
         
     }
 }

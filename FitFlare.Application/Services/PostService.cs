@@ -5,12 +5,21 @@ using FitFlare.Application.Mappings;
 using FitFlare.Application.Services.Interfaces;
 using FitFlare.Core.Entities;
 using FitFlare.Infrastructure.Repositories.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.Extensions.Configuration;
+using UGemini;
+using UGemini.Enums;
 
 namespace FitFlare.Application.Services;
 
-public class PostService(IPostRepository postRepository, IBlobService blobService, UserManager<AppUser> userManager)
+public class PostService(
+    IPostRepository postRepository,
+    IBlobService blobService,
+    UserManager<AppUser> userManager,
+    IConfiguration configuration)
     : IPostService
 {
     public Task<bool> UpdateAsync(PostUpdateDto post, string postId)
@@ -23,18 +32,7 @@ public class PostService(IPostRepository postRepository, IBlobService blobServic
         var user = await userManager.FindByIdAsync(post.UserId);
         if (user == null)
             throw new BadRequestException();
-
-        var contentType = post.Media.ContentType.ToLower();
-        string mediaType;
-        if (contentType.StartsWith("image/"))
-        {
-            mediaType = "image";
-        }
-        else if (contentType.StartsWith("video/"))
-        {
-            mediaType = "video";
-        }
-        else throw new ContentTypeException();
+        var mediaType = GetMediaType(post.Media.ContentType);
 
         var mediaFileName = post.Media.FileName + Guid.NewGuid();
         await blobService.UploadBlobAsync(post.Media, mediaFileName);
@@ -50,6 +48,7 @@ public class PostService(IPostRepository postRepository, IBlobService blobServic
             Media = mediaFileName,
             Description = post.Description,
             Tags = tags,
+            Status = "Published",
         };
 
         var res = await postRepository.CreateAsync(postToCreate);
@@ -84,10 +83,60 @@ public class PostService(IPostRepository postRepository, IBlobService blobServic
         if (!posts.Any())
             return returnDtos;
 
-
         returnDtos.AddRange(posts.Select(post =>
             post!.MapToPostDto(blobService.GetBlobSasUri(post!.Media),
                 post.Tags.Select(m => m.Name).ToList())));
         return returnDtos;
+    }
+
+    public async Task<string> AiAnalyse(PostAnalyseDto dto)
+    {
+        using var memoryStream = new MemoryStream();
+        await dto.Media.CopyToAsync(memoryStream);
+        memoryStream.Position = 0;
+        string base64Image = Convert.ToBase64String(memoryStream.ToArray());
+        string mimeType = dto.Media.ContentType;
+        var mediaType = GetMediaType(dto.Media.ContentType);
+
+        var post = new Post
+        {
+            Media = dto.LocalFileName,
+            UserId = dto.UserId,
+            Status = dto.Status,
+            MediaType = mediaType,
+        };
+
+        if (!await postRepository.CreateAsync(post))
+            throw new InternalServerErrorException();
+
+        var apiKey = configuration["GeminiApiKey"];
+        var client = new GeminiClient(apiKey);
+        var result = await client.GenerateTextWithImageAsync(
+            "I'm posting this image on a social media, review this image and give a short (about 150 characters) advise on how can i improve it",
+            base64Image, mimeType, GeminiModel.Gemini15Flash);
+
+        return result;
+    }
+
+    public string GetMediaType(string contentType)
+    {
+        var mediaType = contentType.ToLower();
+        string result;
+        if (mediaType.StartsWith("image/"))
+            result = "image";
+        else if (mediaType.StartsWith("video/"))
+            result = "video";
+        else throw new ContentTypeException();
+
+        return result;
+    }
+
+    public async Task DeleteDraftedMediaAsync()
+    {
+        var data = await postRepository.FindAsync(m => m.Status == "Drafted");
+        var listData = data.ToList();
+        if (!listData.Any()) return;
+        foreach (var item in listData)
+            await postRepository.DeleteAsync(item!);
     }
 }
