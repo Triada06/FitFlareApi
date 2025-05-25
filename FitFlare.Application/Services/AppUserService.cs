@@ -104,8 +104,9 @@ public class AppUserService(
         var user = await repository.GetByIdAsync(id, include, tracking)
                    ?? throw new UserNotFoundException();
 
-        var userPosts = await postService.FindAsync(p => p.UserId == user.Id && p.Status =="Published",
-            include: query => query.Include(m => m.Tags), false);
+        var userPosts = await postService.FindAsync(p => p.UserId == user.Id && p.Status == "Published",
+            include: query => query.Include(m => m.Tags).Include(m => m.LikedBy),
+            false, user.Id);
         var orderedPosts = userPosts.OrderByDescending(p => p!.PostedWhen).ToList();
 
         var profilePicUri = !string.IsNullOrWhiteSpace(user.ProfilePictureUri)
@@ -173,10 +174,9 @@ public class AppUserService(
         Func<IQueryable<AppUser>, IIncludableQueryable<AppUser, object>>? include = null, bool tracking = true)
     {
         var data = await repository.FindAsync(predicate, include, tracking);
-        var appUsers = data.ToList();
         var returnDtos = new List<AppUserDto>();
-        if (!appUsers.Any()) return returnDtos;
-        foreach (var appUser in appUsers)
+        if (!data.Any()) return returnDtos;
+        foreach (var appUser in data)
         {
             if (!string.IsNullOrWhiteSpace(appUser.ProfilePictureUri))
             {

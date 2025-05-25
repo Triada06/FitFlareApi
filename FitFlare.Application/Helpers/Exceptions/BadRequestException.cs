@@ -1,3 +1,3 @@
 ﻿namespace FitFlare.Application.Helpers.Exceptions;
 
-public class BadRequestException() : Exception("Bad Request");
+public class BadRequestException(string message = "Bad Request") : Exception(message);

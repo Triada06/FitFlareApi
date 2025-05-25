@@ -34,6 +34,12 @@ public class GlobalExceptionHandlerMiddleware : IExceptionHandler
                 Detail = ex.Message,
                 Status = StatusCodes.Status404NotFound
             },
+            BadRequestException ex => new ProblemDetails
+            {
+                Title = "Bad request",
+                Detail = ex.Message,
+                Status = StatusCodes.Status400BadRequest
+            },
             _ => new ProblemDetails
             {
                 Title = "Server Error",

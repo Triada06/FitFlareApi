@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<CommentLike> CommentLikes { get; set; }
     public DbSet<Story> Stories { get; set; }
     public DbSet<Follow> Follows { get; set; }
+    public DbSet<PostLike> PostLikes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -32,6 +33,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         builder.Entity<Follow>()
             .HasIndex(f => new { f.FollowerId, f.FollowingId })
             .IsUnique();
+        
+        
+        builder.Entity<PostLike>()
+            .HasKey(pl => new { pl.UserId, pl.PostId });
+
+        builder.Entity<PostLike>()
+            .HasOne(pl => pl.User)
+            .WithMany(u => u.LikedPosts)
+            .HasForeignKey(pl => pl.UserId);
+
+        builder.Entity<PostLike>()
+            .HasOne(pl => pl.Post)
+            .WithMany(p => p.LikedBy)
+            .HasForeignKey(pl => pl.PostId);
         
         builder.Entity<Comment>()
             .Property(m=>m.Content).HasMaxLength(150);

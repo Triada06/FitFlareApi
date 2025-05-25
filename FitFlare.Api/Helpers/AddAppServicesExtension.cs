@@ -19,6 +19,7 @@ public static class AddAppServicesExtension
         services.AddScoped<IAppUserRepository, AppUserRepository>();
         services.AddScoped<IPostService, PostService>();
         services.AddScoped<IPostRepository, PostRepository>();
+        services.AddScoped<IPostLikeRepository, PostLikeRepository>();
         
         
         //bg services

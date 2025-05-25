@@ -11,6 +11,7 @@ public class PostDto
     public required string MediaType { get; set; }
     public required string PostedById { get; set; }
     public int CommentCount { get; set; }
+    public bool IsLikedByUser  { get; set; }
     public DateTime PostedWhen { get; set; }
     public IEnumerable<string>? HashTags { get; set; } 
 }

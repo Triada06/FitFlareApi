@@ -22,7 +22,7 @@ public class TempFileCleanupService(
                     foreach (var file in files)
                     {
                         var lastModified = File.GetLastWriteTime(file);
-                        if ((DateTime.Now - lastModified).TotalMinutes >= 2)
+                        if ((DateTime.Now - lastModified).TotalHours >= 3)
                         {
                             File.Delete(file);
                             logger.LogInformation("Deleted temp file: {File}", file);
@@ -42,7 +42,7 @@ public class TempFileCleanupService(
                 logger.LogError(ex, "Error deleting temp files.");
             }
 
-            await Task.Delay(TimeSpan.FromMinutes(3), stoppingToken); // TODO: Change to 6 hrs later
+            await Task.Delay(TimeSpan.FromHours(3), stoppingToken); // TODO: Change to 6 hrs later
         }
     }
 }

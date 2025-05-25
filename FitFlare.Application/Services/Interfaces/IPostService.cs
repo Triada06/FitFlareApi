@@ -19,9 +19,11 @@ public interface IPostService
         string? searchText = null);
 
     public Task<IEnumerable<PostDto?>> FindAsync(Expression<Func<Post, bool>> predicate, Func<IQueryable<Post>,
-        IIncludableQueryable<Post, object>>? include = null, bool tracking = true);
+        IIncludableQueryable<Post, object>>? include = null, bool tracking = true, string userIdForLikeChecking = "");
     
     public Task<string> AiAnalyse(PostAnalyseDto dto);
     public string GetMediaType(string contentType);
+    public Task LikePost(string postId, string userId);
+    public Task UnlikePost(string postId, string userId);
     public Task DeleteDraftedMediaAsync();
 }

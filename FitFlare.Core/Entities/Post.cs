@@ -10,9 +10,12 @@ public class Post : BaseEntity
     public required string MediaType { get; init; }
     public required string Status { get; init; }
     
+    
+    
     public string UserId { get; set; }
     public AppUser User { get; set; }
 
+    public ICollection<PostLike> LikedBy { get; set; } = [];
     public ICollection<Comment> Comments { get; set; } = [];    
     public ICollection<Tag> Tags { get; set; } = [];
 }

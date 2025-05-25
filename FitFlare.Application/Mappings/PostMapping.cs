@@ -5,7 +5,7 @@ namespace FitFlare.Application.Mappings;
 
 public static class PostMapping
 {
-    public static PostDto MapToPostDto(this Post post, string mediaUri, List<string>? tags)
+    public static PostDto MapToPostDto(this Post post, string mediaUri, List<string>? tags, bool isLikedByUser)
     {
         return new PostDto
         {
@@ -17,7 +17,8 @@ public static class PostMapping
             Id = post.Id,
             MediaUri = mediaUri,
             PostedWhen = post.CreatedAt,
-            HashTags = tags
+            HashTags = tags,
+            IsLikedByUser = isLikedByUser,
         };
     }
 }

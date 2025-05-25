@@ -24,6 +24,7 @@ public static class ApiEndPoints
         public const string Delete = $"{Base}/{{id}}";
         public const string GetById = $"{Base}/{{id}}";
         public const string GetAll = $"{Base}";
-        
+        public const string Like = $"{Base}/{{id}}/like";
+        public const string UnLike = $"{Base}/{{id}}/unlike";
     }
 }

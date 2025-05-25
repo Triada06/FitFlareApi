@@ -19,6 +19,7 @@ public class PostService(
     IPostRepository postRepository,
     IBlobService blobService,
     UserManager<AppUser> userManager,
+    IPostLikeRepository postLikeRepository,
     IConfiguration configuration)
     : IPostService
 {
@@ -54,7 +55,7 @@ public class PostService(
         var res = await postRepository.CreateAsync(postToCreate);
         if (!res)
             throw new InternalServerErrorException();
-        return postToCreate.MapToPostDto(media, post.HashTags.ToList());
+        return postToCreate.MapToPostDto(media, post.HashTags.ToList(), false);
     }
 
     public Task<bool> DeleteAsync(string userId)
@@ -75,17 +76,37 @@ public class PostService(
     }
 
     public async Task<IEnumerable<PostDto?>> FindAsync(Expression<Func<Post, bool>> predicate,
-        Func<IQueryable<Post>, IIncludableQueryable<Post, object>>? include = null, bool tracking = true)
+        Func<IQueryable<Post>, IIncludableQueryable<Post, object>>? include = null, bool tracking = true,
+        string userIdForLikeChecking = "")
     {
         var data = await postRepository.FindAsync(predicate, include, tracking);
-        var posts = data.ToList();
         var returnDtos = new List<PostDto>();
-        if (!posts.Any())
+        if (!data.Any())
             return returnDtos;
 
-        returnDtos.AddRange(posts.Select(post =>
+        var user = await userManager.FindByIdAsync(userIdForLikeChecking);
+        if (user == null)
+            throw new UserNotFoundException();
+        
+        foreach (var post in data)
+        {
+            var postLike = await postLikeRepository.GetAsync(post!.Id, userIdForLikeChecking);
+            if (postLike != null)
+            {
+                returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media),
+                    post.Tags.Select(m => m.Name).ToList(), post.LikedBy.Contains(postLike)));
+            }
+            else
+            {
+                returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media),
+                    post.Tags.Select(m => m.Name).ToList(), false));
+            }
+        }
+
+        /*returnDtos.AddRange(data.Select(post =>
             post!.MapToPostDto(blobService.GetBlobSasUri(post!.Media),
-                post.Tags.Select(m => m.Name).ToList())));
+                post.Tags.Select(m => m.Name).ToList(),post.LikedBy.Contains(user))));*/
+
         return returnDtos;
     }
 
@@ -129,6 +150,61 @@ public class PostService(
         else throw new ContentTypeException();
 
         return result;
+    }
+
+    public async Task LikePost(string postId, string userId)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BadRequestException();
+
+        var alreadyLiked = await postLikeRepository.ExistsAsync(postId, userId);
+        if (alreadyLiked)
+            throw new BadRequestException("Post is already liked by this user");
+
+        var post = await postRepository.GetByIdAsync(postId);
+        if (post == null)
+            throw new BadRequestException("Post not found");
+
+        var like = new PostLike
+        {
+            PostId = postId,
+            UserId = userId,
+            LikedAt = DateTime.UtcNow
+        };
+        await postLikeRepository.AddAsync(like);
+
+        post.LikeCount++;
+        await postRepository.UpdateAsync(post);
+    }
+
+    public async Task UnlikePost(string postId, string userId)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BadRequestException();
+
+        var alreadyUnLiked = await postLikeRepository.ExistsAsync(postId, userId);
+        if (!alreadyUnLiked)
+            throw new BadRequestException("Post is already unliked by this user");
+
+        var post = await postRepository.GetByIdAsync(postId);
+        if (post == null)
+            throw new BadRequestException("Post not found");
+        var postLike = await postLikeRepository.GetAsync(postId, userId);
+        if (postLike == null)
+            throw new BadRequestException("Post or user id is wrong");
+        await postLikeRepository.RemoveAsync(postLike);
+
+        if (post.LikeCount == 1)
+        {
+            post.LikeCount = 0;
+            await postRepository.UpdateAsync(post);
+            return;
+        }
+
+        post.LikeCount--;
+        await postRepository.UpdateAsync(post);
     }
 
     public async Task DeleteDraftedMediaAsync()

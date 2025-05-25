@@ -64,7 +64,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, IBaseEntity
     }
 
 
-    public async Task<IEnumerable<T?>> FindAsync(Expression<Func<T, bool>> predicate,
+    public async Task<List<T?>> FindAsync(Expression<Func<T, bool>> predicate,
         Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null, bool tracking = false)
     {
         IQueryable<T> query = _context.Set<T>();
