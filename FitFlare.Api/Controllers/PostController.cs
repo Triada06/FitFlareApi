@@ -70,4 +70,24 @@ public class PostController(IPostService postService, IWebHostEnvironment enviro
         await postService.UnlikePost(id, userId);
         return Ok();
     }
+
+    [HttpPut(ApiEndPoints.Post.Save)]
+    public async Task<ActionResult<PostDto>> Save([FromRoute] string id)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
+            return Unauthorized();
+        await postService.SavePost(id, userId);
+        return Ok();
+    }
+
+    [HttpPut(ApiEndPoints.Post.UnSave)]
+    public async Task<ActionResult<PostDto>> UnSave([FromRoute] string id)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
+            return Unauthorized();
+        await postService.UnSavePost(id, userId);
+        return Ok();
+    }
 }

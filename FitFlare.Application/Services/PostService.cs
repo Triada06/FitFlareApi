@@ -20,6 +20,7 @@ public class PostService(
     IBlobService blobService,
     UserManager<AppUser> userManager,
     IPostLikeRepository postLikeRepository,
+    IPostSaveRepository postSaveRepository,
     IConfiguration configuration)
     : IPostService
 {
@@ -40,7 +41,10 @@ public class PostService(
         var media = blobService.GetBlobSasUri(mediaFileName);
 
         List<Tag> tags = [];
-        tags.AddRange(from item in post.HashTags where !string.IsNullOrWhiteSpace(item) select new Tag { Name = item });
+        if (post.HashTags != null)
+            tags.AddRange(from item in post.HashTags
+                where !string.IsNullOrWhiteSpace(item)
+                select new Tag { Name = item });
 
         var postToCreate = new Post
         {
@@ -55,7 +59,7 @@ public class PostService(
         var res = await postRepository.CreateAsync(postToCreate);
         if (!res)
             throw new InternalServerErrorException();
-        return postToCreate.MapToPostDto(media, post.HashTags.ToList(), false);
+        return postToCreate.MapToPostDto(media, post.HashTags, false, false);
     }
 
     public Task<bool> DeleteAsync(string userId)
@@ -87,25 +91,41 @@ public class PostService(
         var user = await userManager.FindByIdAsync(userIdForLikeChecking);
         if (user == null)
             throw new UserNotFoundException();
-        
+
         foreach (var post in data)
         {
             var postLike = await postLikeRepository.GetAsync(post!.Id, userIdForLikeChecking);
+            var postSave = await postSaveRepository.GetByIdAsync(post.UserId, post.Id);
+
             if (postLike != null)
             {
-                returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media),
-                    post.Tags.Select(m => m.Name).ToList(), post.LikedBy.Contains(postLike)));
+                if (postSave != null)
+                {
+                    returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media),
+                        post.Tags.Select(m => m.Name).ToList(), post.LikedBy.Contains(postLike),
+                        post.SavedBy.Contains(postSave)));
+                }
+                else
+                {
+                    returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media),
+                        post.Tags.Select(m => m.Name).ToList(), post.LikedBy.Contains(postLike), false));
+                }
             }
             else
             {
-                returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media),
-                    post.Tags.Select(m => m.Name).ToList(), false));
+                if (postSave != null)
+                {
+                    returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media),
+                        post.Tags.Select(m => m.Name).ToList(), false,
+                        post.SavedBy.Contains(postSave)));
+                }
+                else
+                {
+                    returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media),
+                        post.Tags.Select(m => m.Name).ToList(), false, false));
+                }
             }
         }
-
-        /*returnDtos.AddRange(data.Select(post =>
-            post!.MapToPostDto(blobService.GetBlobSasUri(post!.Media),
-                post.Tags.Select(m => m.Name).ToList(),post.LikedBy.Contains(user))));*/
 
         return returnDtos;
     }
@@ -204,6 +224,55 @@ public class PostService(
         }
 
         post.LikeCount--;
+        await postRepository.UpdateAsync(post);
+    }
+
+    public async Task SavePost(string postId, string userId)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BadRequestException();
+        var post = await postRepository.GetByIdAsync(postId);
+        if (post is null)
+            throw new BadRequestException();
+        var alreadySaved = await postSaveRepository.ExistsAsync(postId, userId);
+        if (alreadySaved)
+            throw new BadRequestException("Post is already saved");
+        var postSave = new PostSave
+        {
+            PostId = postId,
+            UserId = userId,
+        };
+        await postSaveRepository.SaveAsync(postSave);
+        post.SaveCount++;
+        await postRepository.UpdateAsync(post);
+    }
+
+    public async Task UnSavePost(string postId, string userId)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BadRequestException();
+        var post = await postRepository.GetByIdAsync(postId);
+        if (post is null)
+            throw new BadRequestException();
+        var alreadyUnSaved = await postSaveRepository.ExistsAsync(postId, userId);
+        if (!alreadyUnSaved)
+            throw new BadRequestException("Post is already unsaved");
+
+        var postSave = await postSaveRepository.GetByIdAsync(userId, postId);
+        if (postSave == null)
+            throw new BadRequestException("Post not found");
+
+        await postSaveRepository.UnSaveAsync(postSave);
+        if (post.SaveCount == 1)
+        {
+            post.SaveCount = 0;
+            await postRepository.UpdateAsync(post);
+            return;
+        }
+
+        post.SaveCount--;
         await postRepository.UpdateAsync(post);
     }
 

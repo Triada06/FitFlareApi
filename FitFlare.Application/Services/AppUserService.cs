@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Text;
 using FitFlare.Application.Contracts.Responses;
 using FitFlare.Application.DTOs.AppUserDTos;
+using FitFlare.Application.DTOs.Posts;
 using FitFlare.Application.Helpers.Exceptions;
 using FitFlare.Application.Mappings;
 using FitFlare.Application.Services.Interfaces;
@@ -24,6 +25,8 @@ public class AppUserService(
     IBlobService blobService,
     UserManager<AppUser> userManager,
     IPostService postService,
+    IPostSaveRepository postSaveRepository,
+    IPostLikeRepository postLikeRepository,
     IConfiguration config)
     : IAppUserService
 {
@@ -105,15 +108,26 @@ public class AppUserService(
                    ?? throw new UserNotFoundException();
 
         var userPosts = await postService.FindAsync(p => p.UserId == user.Id && p.Status == "Published",
-            include: query => query.Include(m => m.Tags).Include(m => m.LikedBy),
+            include: query => query
+                .Include(m => m.Tags)
+                .Include(m => m.LikedBy)
+                .Include(m => m.SavedBy),
             false, user.Id);
-        var orderedPosts = userPosts.OrderByDescending(p => p!.PostedWhen).ToList();
 
+        var savedPosts = await postSaveRepository.GetAllSavedPostsByUserAsync(user);
+        var orderedSavedPosts = savedPosts.OrderByDescending(p => p.CreatedAt).ToList();
+        var orderedPosts = userPosts.OrderByDescending(p => p!.PostedWhen).ToList();
         var profilePicUri = !string.IsNullOrWhiteSpace(user.ProfilePictureUri)
             ? blobService.GetBlobSasUri(user.ProfilePictureUri)
             : null;
 
-        return user.MapToAppUserDto(profilePicUri, orderedPosts);
+        var orderedSavedPostsDto = orderedSavedPosts.Select(post => post.MapToPostDto(
+            blobService.GetBlobSasUri(post.Media),
+            post.Tags.Select(m => m.Name).ToList(),
+            post.LikedBy.FirstOrDefault(m => m.UserId == user.Id) is not null,
+            true)).ToList();  
+
+        return user.MapToAppUserDto(profilePicUri, orderedPosts, orderedSavedPostsDto);
     }
 
     public async Task<IEnumerable<AppUserDto>> GetAll(

@@ -8,8 +8,9 @@ namespace FitFlare.Application.Mappings;
 public static class AppUserMapping
 {
     public static AppUserDto MapToAppUserDto(this AppUser appUser, string? profilePictureUri = null,
-        IEnumerable<PostDto?>? posts = null)
+        IEnumerable<PostDto?>? posts = null, IEnumerable<PostDto?>? savedPosts = null)
     {
+        savedPosts = savedPosts?.ToList();
         return new AppUserDto
         {
             Id = appUser.Id,
@@ -20,6 +21,7 @@ public static class AppUserMapping
             PostsCount = appUser.Posts.Count,
             ProfilePictureUri = profilePictureUri ?? profilePictureUri,
             Posts = posts?.ToList() ?? [],
+            SavedPosts = savedPosts?.ToList() ?? [],
             FollowersCount = appUser.Followers.Count,
             FollowingCount = appUser.Followers.Count,
         };

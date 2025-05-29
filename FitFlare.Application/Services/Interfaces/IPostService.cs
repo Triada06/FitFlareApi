@@ -25,5 +25,7 @@ public interface IPostService
     public string GetMediaType(string contentType);
     public Task LikePost(string postId, string userId);
     public Task UnlikePost(string postId, string userId);
+    public Task SavePost (string postId, string userId);
+    public Task UnSavePost(string postId, string userId);
     public Task DeleteDraftedMediaAsync();
 }

@@ -26,5 +26,7 @@ public static class ApiEndPoints
         public const string GetAll = $"{Base}";
         public const string Like = $"{Base}/{{id}}/like";
         public const string UnLike = $"{Base}/{{id}}/unlike";
+        public const string Save = $"{Base}/{{id}}/save";
+        public const string UnSave = $"{Base}/{{id}}/unsave";
     }
 }

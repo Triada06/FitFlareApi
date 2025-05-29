@@ -14,4 +14,5 @@ public class AppUserDto
     public int FollowersCount { get; set; }
     public int FollowingCount { get; set; }
     public IEnumerable<PostDto?> Posts { get; set; } = [];
+    public IEnumerable<PostDto?> SavedPosts { get; set; } = [];
 }

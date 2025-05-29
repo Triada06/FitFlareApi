@@ -9,6 +9,7 @@ public class AppUser : IdentityUser, IBaseEntity
     public bool IsBanned { get; set; }
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
 
+    public ICollection<PostSave> SavedPosts { get; set; } = [];
     public ICollection<PostLike> LikedPosts { get; set; } = [];
     public ICollection<Post> Posts { get; set; } = [];
     public ICollection<Comment> Comments { get; set; } = []; //user's comments
