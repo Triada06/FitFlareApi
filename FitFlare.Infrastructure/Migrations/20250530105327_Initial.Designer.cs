@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FitFlare.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250526064542_SavedPostsColumnInserted")]
-    partial class SavedPostsColumnInserted
+    [Migration("20250530105327_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,21 +24,6 @@ namespace FitFlare.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("AppUserPost", b =>
-                {
-                    b.Property<string>("AppUserId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("SavedPostsId")
-                        .HasColumnType("text");
-
-                    b.HasKey("AppUserId", "SavedPostsId");
-
-                    b.HasIndex("SavedPostsId");
-
-                    b.ToTable("SavedPosts", (string)null);
-                });
 
             modelBuilder.Entity("FitFlare.Core.Entities.AppUser", b =>
                 {
@@ -259,6 +244,24 @@ namespace FitFlare.Infrastructure.Migrations
                     b.ToTable("PostLikes");
                 });
 
+            modelBuilder.Entity("FitFlare.Core.Entities.PostSave", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("SavedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId", "PostId");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("PostSaves");
+                });
+
             modelBuilder.Entity("FitFlare.Core.Entities.Story", b =>
                 {
                     b.Property<string>("Id")
@@ -296,11 +299,18 @@ namespace FitFlare.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("UsedCount")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tag");
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -447,22 +457,7 @@ namespace FitFlare.Infrastructure.Migrations
 
                     b.HasIndex("TagsId");
 
-                    b.ToTable("PostTag");
-                });
-
-            modelBuilder.Entity("AppUserPost", b =>
-                {
-                    b.HasOne("FitFlare.Core.Entities.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("AppUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FitFlare.Core.Entities.Post", null)
-                        .WithMany()
-                        .HasForeignKey("SavedPostsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.ToTable("PostTags", (string)null);
                 });
 
             modelBuilder.Entity("FitFlare.Core.Entities.Comment", b =>
@@ -543,6 +538,25 @@ namespace FitFlare.Infrastructure.Migrations
 
                     b.HasOne("FitFlare.Core.Entities.AppUser", "User")
                         .WithMany("LikedPosts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FitFlare.Core.Entities.PostSave", b =>
+                {
+                    b.HasOne("FitFlare.Core.Entities.Post", "Post")
+                        .WithMany("SavedBy")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FitFlare.Core.Entities.AppUser", "User")
+                        .WithMany("SavedPosts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -643,6 +657,8 @@ namespace FitFlare.Infrastructure.Migrations
 
                     b.Navigation("Posts");
 
+                    b.Navigation("SavedPosts");
+
                     b.Navigation("Stories");
                 });
 
@@ -656,6 +672,8 @@ namespace FitFlare.Infrastructure.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("LikedBy");
+
+                    b.Navigation("SavedBy");
                 });
 #pragma warning restore 612, 618
         }

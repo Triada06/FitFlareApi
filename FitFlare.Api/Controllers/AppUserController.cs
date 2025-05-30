@@ -26,7 +26,7 @@ public class AppUserController(IAppUserService appUserService, RoleManager<Ident
     public async Task<IActionResult> SignUp([FromBody] AppUserSignUpDto request)
     {
         var res = await appUserService.SignUpAsync(request);
-        return CreatedAtAction(nameof(GetById), new { id = res.UserDto.Id }, res);
+        return Ok(res);
     }
 
     [AllowAnonymous]
@@ -63,17 +63,16 @@ public class AppUserController(IAppUserService appUserService, RoleManager<Ident
         return Ok();
     }
 
-
-    /*
+    /*[AllowAnonymous]
     [HttpPost("api/addroles")]
     public async Task<IActionResult> CreateRole()
-     {
-         foreach (var role in Enum.GetValues(typeof(AppRoles)))
-         {
-             if (!await roleManager.RoleExistsAsync(role.ToString()))
-                 await roleManager.CreateAsync(new IdentityRole(role.ToString()));
-         }
+    {
+        foreach (var role in Enum.GetValues(typeof(AppRoles)))
+        {
+            if (!await roleManager.RoleExistsAsync(role.ToString()))
+                await roleManager.CreateAsync(new IdentityRole(role.ToString()));
+        }
 
-         return Ok();
-     }*/
+        return Ok();
+    }*/
 }

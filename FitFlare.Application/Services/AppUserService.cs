@@ -40,7 +40,7 @@ public class AppUserService(
 
         var template = appUser.UserName.Trim();
         if (await repository.AnyAsync(n => n.UserName == template && n.Id != userId))
-            throw new UserAlreadyExistsException();
+            throw new UserAlreadyExistsException("This username already taken");
 
         if (appUser.ProfilePicture != null)
         {
@@ -63,7 +63,7 @@ public class AppUserService(
         var isExists = await repository.AnyAsync(u =>
             u.UserName != null && u.UserName.Trim() == template);
         if (isExists)
-            throw new UserAlreadyExistsException();
+            throw new UserAlreadyExistsException("This username already taken, try a different one");
 
         var user = appUser.MapToAppUser();
         var res = await userManager.CreateAsync(user, appUser.PassWord);
@@ -73,7 +73,6 @@ public class AppUserService(
         {
             ExpireTime = DateTime.UtcNow.AddDays(7),
             Token = await GenerateJwtToken(user),
-            UserDto = user.MapToAppUserDto()
         };
     }
 

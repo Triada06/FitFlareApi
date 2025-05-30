@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<CommentLike> CommentLikes { get; set; }
     public DbSet<Story> Stories { get; set; }
     public DbSet<Follow> Follows { get; set; }
+    public DbSet<Tag> Tags { get; set; }
     public DbSet<PostLike> PostLikes { get; set; }
     public DbSet<PostSave> PostSaves { get; set; }
 
@@ -49,6 +50,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             .WithMany(p => p.LikedBy)
             .HasForeignKey(pl => pl.PostId);
 
+        //Post Tag Join table 
+        builder.Entity<Post>()
+            .HasMany(p => p.Tags)
+            .WithMany(t => t.Posts)
+            .UsingEntity(j => j.ToTable("PostTags")); 
+
+        
         // PostSave relationship
         builder.Entity<PostSave>()
             .HasKey(ps => new { ps.UserId, ps.PostId });
@@ -83,5 +91,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         builder.Entity<Post>()
             .Property(m => m.Status)
             .HasMaxLength(10);
+        
+        builder.Entity<Tag>()
+            .HasIndex(x => x.Name)
+            .IsUnique();
+        builder.Entity<Tag>()
+            .Property(x => x.Name)
+            .HasMaxLength(50);
     }
 }

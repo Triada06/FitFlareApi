@@ -8,9 +8,9 @@ namespace FitFlare.Application.Services.Interfaces;
 
 public interface IPostService
 {
-    public Task<bool> UpdateAsync(PostUpdateDto post, string postId);
+    public Task<bool> UpdateAsync(PostUpdateDto post, string postId, string userId);
     public Task<PostDto> CreateAsync(PostCreateDto post);
-    public Task<bool> DeleteAsync(string userId);
+    public Task<bool> DeleteAsync(string postId, string userId);
 
     public Task<PostDto?> GetById(string id, Func<IQueryable<Post>,
         IIncludableQueryable<AppUser, object>>? include = null, bool tracking = true);

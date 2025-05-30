@@ -31,7 +31,9 @@ namespace FitFlare.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
-                    ProfilePicture = table.Column<string>(type: "text", nullable: true),
+                    FullName = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: true),
+                    ProfilePictureUri = table.Column<string>(type: "text", nullable: true),
+                    IsBanned = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -51,6 +53,20 @@ namespace FitFlare.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tags",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    UsedCount = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tags", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -190,9 +206,12 @@ namespace FitFlare.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
-                    AverageScore = table.Column<double>(type: "double precision", nullable: false),
-                    Image = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: true),
+                    Media = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
+                    LikeCount = table.Column<int>(type: "integer", nullable: false),
+                    SaveCount = table.Column<int>(type: "integer", nullable: false),
+                    MediaType = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
+                    Status = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     UserId = table.Column<string>(type: "text", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -201,6 +220,27 @@ namespace FitFlare.Infrastructure.Migrations
                     table.PrimaryKey("PK_Posts", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Posts_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Stories",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    MediaUri = table.Column<string>(type: "text", nullable: false),
+                    ViewerIds = table.Column<string[]>(type: "text[]", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Stories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Stories_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -235,29 +275,75 @@ namespace FitFlare.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Ratings",
+                name: "PostLikes",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "text", nullable: false),
-                    Score = table.Column<int>(type: "integer", nullable: false),
-                    FitId = table.Column<string>(type: "text", nullable: false),
-                    PostId = table.Column<string>(type: "text", nullable: false),
                     UserId = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    PostId = table.Column<string>(type: "text", nullable: false),
+                    LikedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Ratings", x => x.Id);
+                    table.PrimaryKey("PK_PostLikes", x => new { x.UserId, x.PostId });
                     table.ForeignKey(
-                        name: "FK_Ratings_AspNetUsers_UserId",
+                        name: "FK_PostLikes_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Ratings_Posts_PostId",
+                        name: "FK_PostLikes_Posts_PostId",
                         column: x => x.PostId,
                         principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PostSaves",
+                columns: table => new
+                {
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    PostId = table.Column<string>(type: "text", nullable: false),
+                    SavedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PostSaves", x => new { x.UserId, x.PostId });
+                    table.ForeignKey(
+                        name: "FK_PostSaves_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PostSaves_Posts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PostTags",
+                columns: table => new
+                {
+                    PostsId = table.Column<string>(type: "text", nullable: false),
+                    TagsId = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PostTags", x => new { x.PostsId, x.TagsId });
+                    table.ForeignKey(
+                        name: "FK_PostTags_Posts_PostsId",
+                        column: x => x.PostsId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PostTags_Tags_TagsId",
+                        column: x => x.TagsId,
+                        principalTable: "Tags",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -357,19 +443,35 @@ namespace FitFlare.Infrastructure.Migrations
                 column: "FollowingId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PostLikes_PostId",
+                table: "PostLikes",
+                column: "PostId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Posts_UserId",
                 table: "Posts",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Ratings_PostId",
-                table: "Ratings",
+                name: "IX_PostSaves_PostId",
+                table: "PostSaves",
                 column: "PostId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Ratings_UserId",
-                table: "Ratings",
+                name: "IX_PostTags_TagsId",
+                table: "PostTags",
+                column: "TagsId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Stories_UserId",
+                table: "Stories",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tags_Name",
+                table: "Tags",
+                column: "Name",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -397,13 +499,25 @@ namespace FitFlare.Infrastructure.Migrations
                 name: "Follows");
 
             migrationBuilder.DropTable(
-                name: "Ratings");
+                name: "PostLikes");
+
+            migrationBuilder.DropTable(
+                name: "PostSaves");
+
+            migrationBuilder.DropTable(
+                name: "PostTags");
+
+            migrationBuilder.DropTable(
+                name: "Stories");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "Comments");
+
+            migrationBuilder.DropTable(
+                name: "Tags");
 
             migrationBuilder.DropTable(
                 name: "Posts");

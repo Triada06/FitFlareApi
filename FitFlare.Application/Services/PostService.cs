@@ -5,7 +5,6 @@ using FitFlare.Application.Mappings;
 using FitFlare.Application.Services.Interfaces;
 using FitFlare.Core.Entities;
 using FitFlare.Infrastructure.Repositories.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -17,6 +16,8 @@ namespace FitFlare.Application.Services;
 
 public class PostService(
     IPostRepository postRepository,
+    IAppUserRepository appUserRepository,
+    ITagRepository tagRepository,
     IBlobService blobService,
     UserManager<AppUser> userManager,
     IPostLikeRepository postLikeRepository,
@@ -24,9 +25,20 @@ public class PostService(
     IConfiguration configuration)
     : IPostService
 {
-    public Task<bool> UpdateAsync(PostUpdateDto post, string postId)
+    public async Task<bool> UpdateAsync(PostUpdateDto post, string postId, string userId)
     {
-        throw new NotImplementedException();
+        var user = await appUserRepository.GetByIdAsync(userId, i => i.Include(m => m.Posts));
+        if (user == null)
+            throw new UserNotFoundException();
+        var userPost = user.Posts.FirstOrDefault(x => x.Id == postId);
+        if (userPost == null)
+            throw new NotFoundException("Post not found");
+        userPost.Description = post.Description;
+        userPost.Tags = post.Tags?.Select(x => new Tag
+        {
+            Name = x
+        }).ToList() ?? []; //TODO: DELETE THE TAGS IF THE DTO IS NULL
+        return await postRepository.UpdateAsync(userPost);
     }
 
     public async Task<PostDto> CreateAsync(PostCreateDto post)
@@ -35,16 +47,41 @@ public class PostService(
         if (user == null)
             throw new BadRequestException();
         var mediaType = GetMediaType(post.Media.ContentType);
-
         var mediaFileName = post.Media.FileName + Guid.NewGuid();
         await blobService.UploadBlobAsync(post.Media, mediaFileName);
         var media = blobService.GetBlobSasUri(mediaFileName);
 
         List<Tag> tags = [];
-        if (post.HashTags != null)
-            tags.AddRange(from item in post.HashTags
-                where !string.IsNullOrWhiteSpace(item)
-                select new Tag { Name = item });
+
+        if (post.HashTags?.Any() == true)
+        {
+            var found = await tagRepository.FindAsync(
+                tag => post.HashTags.Contains(tag.Name),
+                i => i.Include(m => m.Posts));
+            var existingTags = found
+                .Where(t => t != null)
+                .Select(t => t!)
+                .ToList();
+
+            var existingTagNames = existingTags.Select(t => t.Name).ToHashSet();
+
+            foreach (var tag in existingTags)
+            {
+                tag.UsedCount++;
+            }
+
+            var newTags = post.HashTags
+                .Where(tag => !existingTagNames.Contains(tag))
+                .Select(tag => new Tag
+                {
+                    Name = tag,
+                    UsedCount = 1
+                });
+
+            tags.AddRange(existingTags);
+            tags.AddRange(newTags);
+        }
+
 
         var postToCreate = new Post
         {
@@ -62,9 +99,23 @@ public class PostService(
         return postToCreate.MapToPostDto(media, post.HashTags, false, false);
     }
 
-    public Task<bool> DeleteAsync(string userId)
+    public async Task<bool> DeleteAsync(string postId, string userId)
     {
-        throw new NotImplementedException();
+        var user = await appUserRepository.GetByIdAsync(userId, i => i.Include(m => m.Posts).ThenInclude(m => m.Tags));
+        if (user == null)
+            throw new UserNotFoundException();
+        var userPost = user.Posts.FirstOrDefault(x => x.Id == postId);
+        if (userPost == null)
+            throw new NotFoundException("post not found");
+
+        var postTags = userPost.Tags;
+        foreach (var tag in postTags)
+        {
+            tag.UsedCount--;
+        }
+        await tagRepository.UpdateRangeAsync(postTags);
+
+        return await postRepository.DeleteAsync(userPost);
     }
 
     public Task<PostDto?> GetById(string id,
