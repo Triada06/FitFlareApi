@@ -27,19 +27,63 @@ public class PostService(
 {
     public async Task<bool> UpdateAsync(PostUpdateDto post, string postId, string userId)
     {
-        var user = await appUserRepository.GetByIdAsync(userId, i => i.Include(m => m.Posts));
+        var user = await appUserRepository.GetByIdAsync(userId, i => i.Include(m => m.Posts).ThenInclude(p => p.Tags));
         if (user == null)
             throw new UserNotFoundException();
+
         var userPost = user.Posts.FirstOrDefault(x => x.Id == postId);
         if (userPost == null)
             throw new NotFoundException("Post not found");
+
         userPost.Description = post.Description;
-        userPost.Tags = post.Tags?.Select(x => new Tag
+
+        if (post.Tags is not null && post.Tags.Any())
         {
-            Name = x
-        }).ToList() ?? []; //TODO: DELETE THE TAGS IF THE DTO IS NULL
+            // Step 1: Get existing tags from DB
+            var existingTags = await tagRepository.FindAsync(tag => post.Tags.Contains(tag.Name)) ?? [];
+
+            var existingTagNames = existingTags.Select(t => t.Name).ToList();
+            var newTagNames = post.Tags.Except(existingTagNames).ToList();
+
+            // Step 2: Create new tag entities
+            var newTags = newTagNames.Select(name => new Tag { Name = name, UsedCount = 1 }).ToList();
+
+            // Step 3: Increment used count on existing tags
+            foreach (var tag in existingTags)
+            {
+                tag.UsedCount++;
+            }
+
+            // (Optional Step 4): Decrement removed tags' used count
+            var oldTags = userPost.Tags.ToList();
+            foreach (var oldTag in oldTags)
+            {
+                if (!post.Tags.Contains(oldTag.Name))
+                {
+                    oldTag.UsedCount = Math.Max(0, oldTag.UsedCount - 1);
+                }
+            }
+
+            // Step 5: Set final tag list
+            userPost.Tags.Clear();
+            foreach (var tag in existingTags.Concat(newTags))
+            {
+                userPost.Tags.Add(tag);
+            }
+        }
+        else
+        {
+            // If no tags provided, clear existing ones and decrement their count
+            foreach (var oldTag in userPost.Tags)
+            {
+                oldTag.UsedCount = Math.Max(0, oldTag.UsedCount - 1);
+            }
+            userPost.Tags.Clear();
+        }
+
         return await postRepository.UpdateAsync(userPost);
     }
+
 
     public async Task<PostDto> CreateAsync(PostCreateDto post)
     {
@@ -113,6 +157,7 @@ public class PostService(
         {
             tag.UsedCount--;
         }
+
         await tagRepository.UpdateRangeAsync(postTags);
 
         return await postRepository.DeleteAsync(userPost);
