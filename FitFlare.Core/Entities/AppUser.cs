@@ -6,9 +6,9 @@ public class AppUser : IdentityUser, IBaseEntity
 {
     public string? FullName { get; set; }
     public string? ProfilePictureUri { get; set; }
+    public string? Bio { get; set; }
     public bool IsBanned { get; set; }
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
-
     public ICollection<PostSave> SavedPosts { get; set; } = [];
     public ICollection<PostLike> LikedPosts { get; set; } = [];
     public ICollection<Post> Posts { get; set; } = [];

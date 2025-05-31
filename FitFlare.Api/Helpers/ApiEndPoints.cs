@@ -12,10 +12,10 @@ public static class ApiEndPoints
         public const string GetAll = $"{Base}";
         public const string GetById = $"{Base}/{{id}}";
         public const string Delete = $"{Base}/{{id}}";
-        public const string Update = $"{Base}/{{id}}";
+        public const string EditProfile = $"{Base}/me/editprofile";
     }
 
-
+    
     public static class Post
     {
         private const string Base = $"{ApiBase}/post";

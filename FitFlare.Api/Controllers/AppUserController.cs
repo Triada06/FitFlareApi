@@ -1,4 +1,5 @@
-﻿using FitFlare.Api.Helpers;
+﻿using System.Security.Claims;
+using FitFlare.Api.Helpers;
 using FitFlare.Application.DTOs.AppUserDTos;
 using FitFlare.Application.Services;
 using FitFlare.Application.Services.Interfaces;
@@ -56,10 +57,13 @@ public class AppUserController(IAppUserService appUserService, RoleManager<Ident
         return Ok();
     }
 
-    [HttpPut(ApiEndPoints.AppUser.Update)]
-    public async Task<IActionResult> Update([FromForm] AppUserUpdateDto request, [FromRoute] string id)
+    [HttpPut(ApiEndPoints.AppUser.EditProfile)]
+    public async Task<IActionResult> EditProfile([FromForm] AppUserUpdateDto request)
     {
-        var res = await appUserService.UpdateAsync(request, id);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
+            return Unauthorized();
+        await appUserService.UpdateAsync(request, userId);
         return Ok();
     }
 

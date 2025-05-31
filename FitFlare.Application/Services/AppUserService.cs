@@ -30,10 +30,10 @@ public class AppUserService(
     IConfiguration config)
     : IAppUserService
 {
-    public async Task<bool> UpdateAsync(AppUserUpdateDto appUser, string userId)
+    public async Task UpdateAsync(AppUserUpdateDto appUser, string userId)
     {
         if (string.IsNullOrWhiteSpace(userId))
-            return false;
+            throw new BadRequestException("UserId is required");
         var user = await repository.GetByIdAsync(userId);
         if (user == null)
             throw new UserNotFoundException();
@@ -49,12 +49,14 @@ public class AppUserService(
                 await blobService.DeleteBlobAsync(user.ProfilePictureUri);
 
             await blobService.UploadBlobAsync(appUser.ProfilePicture, user.ProfilePictureUri!);
-            await repository.UpdateAsync(user);
-            return true;
+            await userManager.UpdateAsync(user);
+            return;
         }
 
         appUser.MapToAppUser(user);
-        return await repository.UpdateAsync(user);
+       var res =  await userManager.UpdateAsync(user);
+       if(!res.Succeeded)
+           throw new InternalServerErrorException("Failed to update user");
     }
 
     public async Task<AuthResponse> SignUpAsync(AppUserSignUpDto appUser)
@@ -67,7 +69,7 @@ public class AppUserService(
 
         var user = appUser.MapToAppUser();
         var res = await userManager.CreateAsync(user, appUser.PassWord);
-        if (!res.Succeeded) throw new InternalServerErrorException();
+        if (!res.Succeeded) throw new InternalServerErrorException("Failed to SignUp, try again later");
         await userManager.AddToRoleAsync(user, nameof(AppRoles.Member));
         return new AuthResponse
         {

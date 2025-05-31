@@ -54,9 +54,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         builder.Entity<Post>()
             .HasMany(p => p.Tags)
             .WithMany(t => t.Posts)
-            .UsingEntity(j => j.ToTable("PostTags")); 
+            .UsingEntity(j => j.ToTable("PostTags"));
 
-        
+
         // PostSave relationship
         builder.Entity<PostSave>()
             .HasKey(ps => new { ps.UserId, ps.PostId });
@@ -80,6 +80,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             .Property(m => m.FullName)
             .HasMaxLength(30);
 
+        builder.Entity<AppUser>()
+            .Property(m => m.Bio)
+            .HasMaxLength(150);
+
         builder.Entity<Post>()
             .Property(m => m.MediaType)
             .HasMaxLength(5);
@@ -91,7 +95,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         builder.Entity<Post>()
             .Property(m => m.Status)
             .HasMaxLength(10);
-        
+
         builder.Entity<Tag>()
             .HasIndex(x => x.Name)
             .IsUnique();

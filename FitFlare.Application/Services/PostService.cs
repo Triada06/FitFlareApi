@@ -39,22 +39,18 @@ public class PostService(
 
         if (post.Tags is not null && post.Tags.Any())
         {
-            // Step 1: Get existing tags from DB
             var existingTags = await tagRepository.FindAsync(tag => post.Tags.Contains(tag.Name)) ?? [];
 
             var existingTagNames = existingTags.Select(t => t.Name).ToList();
             var newTagNames = post.Tags.Except(existingTagNames).ToList();
 
-            // Step 2: Create new tag entities
             var newTags = newTagNames.Select(name => new Tag { Name = name, UsedCount = 1 }).ToList();
 
-            // Step 3: Increment used count on existing tags
             foreach (var tag in existingTags)
             {
                 tag.UsedCount++;
             }
 
-            // (Optional Step 4): Decrement removed tags' used count
             var oldTags = userPost.Tags.ToList();
             foreach (var oldTag in oldTags)
             {
@@ -64,7 +60,6 @@ public class PostService(
                 }
             }
 
-            // Step 5: Set final tag list
             userPost.Tags.Clear();
             foreach (var tag in existingTags.Concat(newTags))
             {
@@ -73,7 +68,6 @@ public class PostService(
         }
         else
         {
-            // If no tags provided, clear existing ones and decrement their count
             foreach (var oldTag in userPost.Tags)
             {
                 oldTag.UsedCount = Math.Max(0, oldTag.UsedCount - 1);
@@ -139,7 +133,7 @@ public class PostService(
 
         var res = await postRepository.CreateAsync(postToCreate);
         if (!res)
-            throw new InternalServerErrorException();
+            throw new InternalServerErrorException("Failed to create post");
         return postToCreate.MapToPostDto(media, post.HashTags, false, false);
     }
 
@@ -244,7 +238,7 @@ public class PostService(
         };
 
         if (!await postRepository.CreateAsync(post))
-            throw new InternalServerErrorException();
+            throw new InternalServerErrorException("Failed to analyse post");
 
         var apiKey = configuration["GeminiApiKey"];
         var client = new GeminiClient(apiKey);

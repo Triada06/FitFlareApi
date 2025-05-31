@@ -8,7 +8,7 @@ namespace FitFlare.Application.Services.Interfaces;
 
 public interface IAppUserService
 {
-    public Task<bool> UpdateAsync(AppUserUpdateDto appUser, string userId);
+    public Task UpdateAsync(AppUserUpdateDto appUser, string userId);
     public Task<AuthResponse> SignUpAsync(AppUserSignUpDto appUser);
     public Task<string> SignInAsync(AppUserSignInDto appUserDto);
     public Task<bool> DeleteAsync(string userId);

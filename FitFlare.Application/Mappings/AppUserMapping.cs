@@ -16,6 +16,7 @@ public static class AppUserMapping
             Id = appUser.Id,
             Email = appUser.Email!,
             FullName = appUser.FullName,
+            Bio = appUser.Bio,
             UserName = appUser.UserName!,
             IsBanned = appUser.IsBanned,
             PostsCount = appUser.Posts.Count,
@@ -33,6 +34,7 @@ public static class AppUserMapping
             profilePicture = Guid.NewGuid() + " - " + profilePicture;
         appUser.FullName = userToMap.FullName;
         appUser.UserName = userToMap.UserName;
+        appUser.Bio = userToMap.Bio;
         appUser.ProfilePictureUri = profilePicture ?? appUser.ProfilePictureUri;
 
         return appUser;
