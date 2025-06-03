@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text;
+using FitFlare.Application.Contracts.Requests;
 using FitFlare.Application.Contracts.Responses;
 using FitFlare.Application.DTOs.AppUserDTos;
 using FitFlare.Application.DTOs.Posts;
@@ -54,9 +55,9 @@ public class AppUserService(
         }
 
         appUser.MapToAppUser(user);
-       var res =  await userManager.UpdateAsync(user);
-       if(!res.Succeeded)
-           throw new InternalServerErrorException("Failed to update user");
+        var res = await userManager.UpdateAsync(user);
+        if (!res.Succeeded)
+            throw new InternalServerErrorException("Failed to update user");
     }
 
     public async Task<AuthResponse> SignUpAsync(AppUserSignUpDto appUser)
@@ -92,12 +93,15 @@ public class AppUserService(
 
     public async Task<bool> DeleteAsync(string userId)
     {
+        //TODO:FIX TS METHOD AFTER DEALING WITH ALL RELATED STUFF (FOLLOWERS,FOLLOWING,COMMENTS AND ETC.) OR PMO
         var user = await repository.GetByIdAsync(userId);
         if (user == null)
             throw new UserNotFoundException();
         if (!string.IsNullOrWhiteSpace(user.ProfilePictureUri))
             await blobService.DeleteBlobAsync(user.ProfilePictureUri);
-        return await repository.DeleteAsync(user);
+        var res = await userManager.DeleteAsync(user);
+        if (res.Succeeded) return true;
+        throw new InternalServerErrorException("Failed to delete user");
     }
 
     public async Task<AppUserDto?> GetById(
@@ -126,7 +130,7 @@ public class AppUserService(
             blobService.GetBlobSasUri(post.Media),
             post.Tags.Select(m => m.Name).ToList(),
             post.LikedBy.FirstOrDefault(m => m.UserId == user.Id) is not null,
-            true)).ToList();  
+            true)).ToList();
 
         return user.MapToAppUserDto(profilePicUri, orderedPosts, orderedSavedPostsDto);
     }
@@ -207,6 +211,34 @@ public class AppUserService(
         return returnDtos;
     }
 
+    public async Task ChangePrivacy(string userId)
+    {
+        var user = await repository.GetByIdAsync(userId);
+        if (user == null)
+            throw new UserNotFoundException();
+        user.IsPrivate = !user.IsPrivate;
+        await repository.UpdateAsync(user);
+    }
+
+    public async Task<bool> VerifyPassword(string userId, string password)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user is null)
+            throw new UserNotFoundException();
+        var result = await userManager.CheckPasswordAsync(user, password);
+        return result;
+    }
+
+    public async Task<bool> ChangePassword(string userId, PasswordChangeRequest request)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user is null)
+            throw new UserNotFoundException();
+        var result = await userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
+        if (result.Succeeded) return true;
+        throw new BadRequestException("Failed to change password, please try again later");
+    }
+
     private async Task<string> GenerateJwtToken(AppUser user)
     {
         var roles = await userManager.GetRolesAsync(user);
@@ -214,7 +246,7 @@ public class AppUserService(
         var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email!),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(ClaimTypes.NameIdentifier, user.Id)
         };

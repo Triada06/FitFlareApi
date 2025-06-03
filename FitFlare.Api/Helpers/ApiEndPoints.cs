@@ -13,6 +13,9 @@ public static class ApiEndPoints
         public const string GetById = $"{Base}/{{id}}";
         public const string Delete = $"{Base}/{{id}}";
         public const string EditProfile = $"{Base}/me/editprofile";
+        public const string EditProfilePrivacy = $"{Base}/me/changeprivacy";
+        public const string VerifyPassword = $"{Base}/me/verifypassword";
+        public const string ChangePassword = $"{Base}/me/security/changepassword";
     }
 
     

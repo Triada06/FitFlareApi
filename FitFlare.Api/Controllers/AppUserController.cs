@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using FitFlare.Api.Helpers;
+using FitFlare.Application.Contracts.Requests;
 using FitFlare.Application.DTOs.AppUserDTos;
 using FitFlare.Application.Services;
 using FitFlare.Application.Services.Interfaces;
@@ -64,6 +65,36 @@ public class AppUserController(IAppUserService appUserService, RoleManager<Ident
         if (userId == null)
             return Unauthorized();
         await appUserService.UpdateAsync(request, userId);
+        return Ok();
+    }
+
+    [HttpPut(ApiEndPoints.AppUser.EditProfilePrivacy)]
+    public async Task<IActionResult> ChangeProfilePrivacy()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
+            return Unauthorized();
+        await appUserService.ChangePrivacy(userId);
+        return Ok();
+    }
+
+    [HttpPost(ApiEndPoints.AppUser.VerifyPassword)]
+    public async Task<IActionResult> VerifyPassword([FromBody] PasswordVerifyRequest passwordDto)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
+            return Unauthorized();
+        var response = await appUserService.VerifyPassword(userId, passwordDto.Password);
+        return response ? Ok() : BadRequest(new { message = "Wrong password bro" });
+    }
+
+    [HttpPut(ApiEndPoints.AppUser.ChangePassword)]
+    public async Task<IActionResult> ChangePassword([FromBody] PasswordChangeRequest request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId is null)
+            return Unauthorized();
+        await appUserService.ChangePassword(userId, request);
         return Ok();
     }
 

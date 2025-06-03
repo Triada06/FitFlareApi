@@ -37,10 +37,10 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, IBaseEntity
     }
 
     public async Task<T?> GetByIdAsync(string id, Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,
-        bool tracking = false)
+        bool tracking = true)
     {
         IQueryable<T> query = _context.Set<T>();
-        query = tracking ? query.AsTracking() : query;
+        query = tracking ? query : query.AsNoTracking();
         if (include != null)
             query = include(query);
         var data = await query.ToListAsync();

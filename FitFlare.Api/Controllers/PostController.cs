@@ -64,7 +64,7 @@ public class PostController(IPostService postService, IWebHostEnvironment enviro
     [HttpPut(ApiEndPoints.Post.Update)]
     public async Task<ActionResult> Update([FromBody] PostUpdateDto post, [FromRoute] string id)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;   
         if(userId == null)
             return Unauthorized();
         await postService.UpdateAsync(post, id, userId);

@@ -19,6 +19,7 @@ public static class AppUserMapping
             Bio = appUser.Bio,
             UserName = appUser.UserName!,
             IsBanned = appUser.IsBanned,
+            IsPrivate = appUser.IsPrivate,
             PostsCount = appUser.Posts.Count,
             ProfilePictureUri = profilePictureUri ?? profilePictureUri,
             Posts = posts?.ToList() ?? [],
