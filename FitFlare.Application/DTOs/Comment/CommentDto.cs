@@ -9,5 +9,6 @@ public class CommentDto
     public required string Content { get; set; }
     public DateTime CommentedWhen { get; set; }
     public int CommentLikeCount { get; set; }
+    public bool IsLikedByUser { get; set; }
     public int ReplyCount { get; set; }
 }

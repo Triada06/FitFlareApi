@@ -41,5 +41,10 @@ public static class ApiEndPoints
         public const string GetById = $"{Base}/{{id}}";
         public const string GetByPostId = $"{Base}/post/{{postId}}";
         public const string GetAll = $"{Base}";
+        public const string AddReply = $"{Base}/{{commentId}}/addreply";
+        public const string Replies = $"{Base}/{{parentCommentId}}/replies";
+        public const string Like = $"{Base}/{{id}}/like";
+        public const string UnLike = $"{Base}/{{id}}/unlike";
+
     }
 }

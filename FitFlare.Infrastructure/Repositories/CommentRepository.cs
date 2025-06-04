@@ -15,10 +15,12 @@ public class CommentRepository(AppDbContext context) : BaseRepository<Comment>(c
         IQueryable<Comment> query = _context1.Set<Comment>();
 
         query = tracking ? query : query.AsNoTracking();
-        query = query.Where(m => m.PostId == postId);
+        query = query.Where(m => m.PostId == postId && m.ParentCommentId== null);
         query = query
             .Include(m => m.Post)
-            .Include(m => m.User);
+            .Include(m=>m.Likes)
+            .Include(m => m.User)
+            .Include(m => m.Replies);
 
         query = query.Skip(page * pageSize - pageSize).Take(pageSize);
         return await query.ToListAsync();
@@ -31,10 +33,12 @@ public class CommentRepository(AppDbContext context) : BaseRepository<Comment>(c
         IQueryable<Comment> query = _context1.Set<Comment>();
 
         query = tracking ? query : query.AsNoTracking();
-        query = query.Where(m => m.PostId == postId && m.ParentCommentId == parentCommentId );
+        query = query.Where(m => m.PostId == postId && m.ParentCommentId == parentCommentId);
         query = query
             .Include(m => m.Post)
-            .Include(m => m.User);
+            .Include(m => m.User)
+            .Include(m=>m.Likes)
+            .Include(m => m.Replies);
         query = query.Skip(page * pageSize - pageSize).Take(pageSize);
         return await query.ToListAsync();
     }

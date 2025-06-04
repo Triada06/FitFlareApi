@@ -1,5 +1,5 @@
 ﻿using Azure.Storage.Blobs;
-using FitFlare.Api.BackgroundServicesa;
+using FitFlare.Api.BackgroundServices;
 using FitFlare.Application.Services;
 using FitFlare.Application.Services.Interfaces;
 using FitFlare.Application.Services.Shared;
@@ -25,6 +25,8 @@ public static class AddAppServicesExtension
         services.AddScoped<ITagService, TagService>();
         services.AddScoped<ICommentRepository, CommentRepository>();
         services.AddScoped<ICommentService, CommentService>();
+        services.AddScoped<ICommentLikeRepository, CommentLikeRepository>();
+        
         //bg services
         services.AddHostedService<TempFileCleanupService>();
 

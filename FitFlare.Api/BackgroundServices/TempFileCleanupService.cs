@@ -1,7 +1,6 @@
 ﻿using FitFlare.Application.Services.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
 
-namespace FitFlare.Api.BackgroundServicesa;
+namespace FitFlare.Api.BackgroundServices;
 
 public class TempFileCleanupService(
     IWebHostEnvironment env,

@@ -15,7 +15,7 @@ public static class CommentMapping
         };
     }
 
-    public static CommentDto MapToCommentDto(this Comment comment, string? commentatorProfilePictureSasUri)
+    public static CommentDto MapToCommentDto(this Comment comment, string? commentatorProfilePictureSasUri, string? userId)
     {
         return new CommentDto
         {
@@ -26,7 +26,19 @@ public static class CommentMapping
             CommentedWhen = comment.CreatedAt,
             CommenterProfilePicture = commentatorProfilePictureSasUri,
             CommentLikeCount = comment.Likes.Count,
-            ReplyCount = comment.Replies.Count
+            ReplyCount = comment.Replies.Count,
+            IsLikedByUser = comment.Likes.Any(like => like.UserId == userId),
+        };
+    }
+
+    public static Comment MapToReply(this CommentReplyCreateDto commentReplyDto, string userId, string parentCommentId)
+    {
+        return new Comment
+        {
+            Content = commentReplyDto.Content,
+            UserId = userId,
+            PostId = commentReplyDto.PostId,
+            ParentCommentId =  parentCommentId
         };
     }
 }

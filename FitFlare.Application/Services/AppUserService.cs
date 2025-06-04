@@ -116,6 +116,7 @@ public class AppUserService(
             include: query => query
                 .Include(m => m.Tags)
                 .Include(m => m.LikedBy)
+                .Include(m => m.Comments)
                 .Include(m => m.SavedBy),
             false, user.Id);
 
