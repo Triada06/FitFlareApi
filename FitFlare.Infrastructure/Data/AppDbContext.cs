@@ -71,6 +71,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             .WithMany(p => p.SavedBy)
             .HasForeignKey(ps => ps.PostId);
 
+        //comment self references
+        builder.Entity<Comment>()
+            .HasOne(c => c.ParentComment)
+            .WithMany(c => c.Replies)
+            .HasForeignKey(c => c.ParentCommentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // Property constraints
         builder.Entity<Comment>()
             .Property(m => m.Content)

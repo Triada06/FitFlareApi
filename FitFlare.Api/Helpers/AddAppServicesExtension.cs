@@ -23,6 +23,8 @@ public static class AddAppServicesExtension
         services.AddScoped<IPostSaveRepository, PostSaveRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<ITagService, TagService>();
+        services.AddScoped<ICommentRepository, CommentRepository>();
+        services.AddScoped<ICommentService, CommentService>();
         //bg services
         services.AddHostedService<TempFileCleanupService>();
 

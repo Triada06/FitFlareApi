@@ -17,7 +17,6 @@ public static class ApiEndPoints
         public const string VerifyPassword = $"{Base}/me/verifypassword";
         public const string ChangePassword = $"{Base}/me/security/changepassword";
     }
-
     
     public static class Post
     {
@@ -31,5 +30,16 @@ public static class ApiEndPoints
         public const string UnLike = $"{Base}/{{id}}/unlike";
         public const string Save = $"{Base}/{{id}}/save";
         public const string UnSave = $"{Base}/{{id}}/unsave";
+    }
+
+    public static class Comment
+    {
+        private const string Base = $"{ApiBase}/comment";
+        public const string Create = $"{Base}";
+        public const string Update = $"{Base}/{{id}}";
+        public const string Delete = $"{Base}/{{id}}";
+        public const string GetById = $"{Base}/{{id}}";
+        public const string GetByPostId = $"{Base}/post/{{postId}}";
+        public const string GetAll = $"{Base}";
     }
 }
