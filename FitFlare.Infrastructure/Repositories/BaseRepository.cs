@@ -49,7 +49,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, IBaseEntity
         return returnData;
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync(int page = 1, int pageSize = 5, bool tracking = true,
+    public virtual async Task<IEnumerable<T>> GetAllAsync(int page = 1, int pageSize = 5, bool tracking = true,
         Func<IQueryable<T>, IQueryable<T>>? include = null)
     {
         IQueryable<T> query = _context.Set<T>();

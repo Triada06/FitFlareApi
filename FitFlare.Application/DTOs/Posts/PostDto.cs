@@ -11,6 +11,8 @@ public class PostDto
     public required string MediaType { get; set; }
     public required string PostedById { get; set; }
     public int CommentCount { get; set; }
+    public string? AuthorProfilePicUri { get; set; }
+    public required string AuthorUserName { get; set; }
     public bool IsLikedByUser  { get; set; }
     public bool IsSavedByUSer { get; set; }
     public DateTime PostedWhen { get; set; }

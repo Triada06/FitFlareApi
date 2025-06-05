@@ -72,6 +72,7 @@ public class PostService(
             {
                 oldTag.UsedCount = Math.Max(0, oldTag.UsedCount - 1);
             }
+
             userPost.Tags.Clear();
         }
 
@@ -134,7 +135,8 @@ public class PostService(
         var res = await postRepository.CreateAsync(postToCreate);
         if (!res)
             throw new InternalServerErrorException("Failed to create post");
-        return postToCreate.MapToPostDto(media, post.HashTags, false, false);
+        return postToCreate.MapToPostDto(media, user.UserName!, post.HashTags, false, false,
+            user.ProfilePictureUri is not null ? blobService.GetBlobSasUri(user.ProfilePictureUri) : null);
     }
 
     public async Task<bool> DeleteAsync(string postId, string userId)
@@ -163,10 +165,25 @@ public class PostService(
         throw new NotImplementedException();
     }
 
-    public Task<IEnumerable<PostDto>> GetAll(int page, string? sort, int pageSize = 5, bool tracking = true,
-        string? searchText = null)
+    public async Task<IEnumerable<PostDto>> GetAll(string userId, int page, string? sort, int pageSize = 5,
+        bool tracking = true)
     {
-        throw new NotImplementedException();
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new UserNotFoundException();
+
+        var data = await postRepository.GetAllAsync(page, pageSize, tracking, i => i
+            .Include(m => m.Comments)
+            .Include(m => m.User)
+            .Include(m => m.LikedBy)
+            .Include(m => m.LikedBy)
+            .Include(m => m.Comments)
+            .Include(m => m.Tags));
+
+        return data.Select(m => m.MapToPostDto(blobService.GetBlobSasUri(m.Media), m.User.UserName!,
+            m.Tags.Select(t => t.Name).ToList(),
+            m.LikedBy.Any(l => l.UserId == userId), m.SavedBy.Any(l => l.UserId == userId),
+            m.User.ProfilePictureUri is not null ? blobService.GetBlobSasUri(m.User.ProfilePictureUri) : null));
     }
 
     public async Task<IEnumerable<PostDto?>> FindAsync(Expression<Func<Post, bool>> predicate,
@@ -191,28 +208,40 @@ public class PostService(
             {
                 if (postSave != null)
                 {
-                    returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media),
+                    returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media), post.User.UserName!,
                         post.Tags.Select(m => m.Name).ToList(), post.LikedBy.Contains(postLike),
-                        post.SavedBy.Contains(postSave)));
+                        post.SavedBy.Contains(postSave),
+                        post.User.ProfilePictureUri is not null
+                            ? blobService.GetBlobSasUri(post.User.ProfilePictureUri)
+                            : null));
                 }
                 else
                 {
-                    returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media),
-                        post.Tags.Select(m => m.Name).ToList(), post.LikedBy.Contains(postLike), false));
+                    returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media), post.User.UserName!,
+                        post.Tags.Select(m => m.Name).ToList(), post.LikedBy.Contains(postLike), false,
+                        post.User.ProfilePictureUri is not null
+                            ? blobService.GetBlobSasUri(post.User.ProfilePictureUri)
+                            : null));
                 }
             }
             else
             {
                 if (postSave != null)
                 {
-                    returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media),
+                    returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media), post.User.UserName!,
                         post.Tags.Select(m => m.Name).ToList(), false,
-                        post.SavedBy.Contains(postSave)));
+                        post.SavedBy.Contains(postSave),
+                        post.User.ProfilePictureUri is not null
+                            ? blobService.GetBlobSasUri(post.User.ProfilePictureUri)
+                            : null));
                 }
                 else
                 {
-                    returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media),
-                        post.Tags.Select(m => m.Name).ToList(), false, false));
+                    returnDtos.Add(post.MapToPostDto(blobService.GetBlobSasUri(post.Media), post.User.UserName!,
+                        post.Tags.Select(m => m.Name).ToList(), false, false,
+                        post.User.ProfilePictureUri is not null
+                            ? blobService.GetBlobSasUri(post.User.ProfilePictureUri)
+                            : null));
                 }
             }
         }

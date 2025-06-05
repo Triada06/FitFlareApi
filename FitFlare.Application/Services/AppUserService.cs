@@ -128,10 +128,10 @@ public class AppUserService(
             : null;
 
         var orderedSavedPostsDto = orderedSavedPosts.Select(post => post.MapToPostDto(
-            blobService.GetBlobSasUri(post.Media),
+            blobService.GetBlobSasUri(post.Media),user.UserName!,
             post.Tags.Select(m => m.Name).ToList(),
             post.LikedBy.FirstOrDefault(m => m.UserId == user.Id) is not null,
-            true)).ToList();
+            true,profilePicUri)).ToList();
 
         return user.MapToAppUserDto(profilePicUri, orderedPosts, orderedSavedPostsDto);
     }

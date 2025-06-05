@@ -2,4 +2,6 @@
 
 namespace FitFlare.Infrastructure.Repositories.Interfaces;
 
-public interface IPostRepository : IBaseRepository<Post>;
+public interface IPostRepository : IBaseRepository<Post>
+{
+}

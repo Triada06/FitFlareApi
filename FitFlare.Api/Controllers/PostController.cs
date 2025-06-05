@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using FitFlare.Api.Helpers;
+using FitFlare.Application.DTOs.Comment;
 using FitFlare.Application.DTOs.Posts;
 using FitFlare.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -64,8 +65,8 @@ public class PostController(IPostService postService, IWebHostEnvironment enviro
     [HttpPut(ApiEndPoints.Post.Update)]
     public async Task<ActionResult> Update([FromBody] PostUpdateDto post, [FromRoute] string id)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;   
-        if(userId == null)
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
             return Unauthorized();
         await postService.UpdateAsync(post, id, userId);
         return Ok();
@@ -109,5 +110,15 @@ public class PostController(IPostService postService, IWebHostEnvironment enviro
             return Unauthorized();
         await postService.UnSavePost(id, userId);
         return Ok();
+    }
+
+    [HttpGet(ApiEndPoints.Post.GetAll)]
+    public async Task<ActionResult<CommentDto[]>> GetAll([FromQuery] int page)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
+            return Unauthorized();
+        var res = await postService.GetAll(userId, page, null, 15, false);
+        return Ok(res);
     }
 }
