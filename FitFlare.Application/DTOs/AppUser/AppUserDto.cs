@@ -1,6 +1,6 @@
 ﻿using FitFlare.Application.DTOs.Posts;
 
-namespace FitFlare.Application.DTOs.AppUserDTos;
+namespace FitFlare.Application.DTOs.AppUser;
 
 public class AppUserDto
 {

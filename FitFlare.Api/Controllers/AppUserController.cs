@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 using FitFlare.Api.Helpers;
 using FitFlare.Application.Contracts.Requests;
-using FitFlare.Application.DTOs.AppUserDTos;
+using FitFlare.Application.DTOs.AppUser;
 using FitFlare.Application.Services;
 using FitFlare.Application.Services.Interfaces;
 using FitFlare.Core;
@@ -48,6 +48,13 @@ public class AppUserController(IAppUserService appUserService, RoleManager<Ident
     {
         if (page < 1) page = 1;
         var data = await appUserService.GetAll(page, sort, 5, false, searchText);
+        return Ok(data);
+    }
+
+    [HttpGet(ApiEndPoints.AppUser.Search)]
+    public async Task<IActionResult> GetSearch([FromQuery] string? searchText)
+    {
+        var data = await appUserService.SearchAsync(searchText);
         return Ok(data);
     }
 

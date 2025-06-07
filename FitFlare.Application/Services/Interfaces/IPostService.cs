@@ -16,9 +16,9 @@ public interface IPostService
 
     public Task<IEnumerable<PostDto>> GetAll(string userId,int page, string? sort, int pageSize = 5, bool tracking = true);
 
+    public Task<IEnumerable<PostDto?>> GetByTagAsync(string tagId,string userId);
     public Task<IEnumerable<PostDto?>> FindAsync(Expression<Func<Post, bool>> predicate, Func<IQueryable<Post>,
         IIncludableQueryable<Post, object>>? include = null, bool tracking = true, string userIdForLikeChecking = "");
-    
     public Task<string> AiAnalyse(PostAnalyseDto dto);
     public string GetMediaType(string contentType);
     public Task LikePost(string postId, string userId);

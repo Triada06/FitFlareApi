@@ -4,15 +4,13 @@ using System.Security.Claims;
 using System.Text;
 using FitFlare.Application.Contracts.Requests;
 using FitFlare.Application.Contracts.Responses;
-using FitFlare.Application.DTOs.AppUserDTos;
-using FitFlare.Application.DTOs.Posts;
+using FitFlare.Application.DTOs.AppUser;
 using FitFlare.Application.Helpers.Exceptions;
 using FitFlare.Application.Mappings;
 using FitFlare.Application.Services.Interfaces;
 using FitFlare.Core;
 using FitFlare.Core.Entities;
 using FitFlare.Infrastructure.Repositories.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -22,7 +20,7 @@ using Microsoft.IdentityModel.Tokens;
 namespace FitFlare.Application.Services;
 
 public class AppUserService(
-    IAppUserRepository repository,
+    IAppUserRepository appUserRepository,
     IBlobService blobService,
     UserManager<AppUser> userManager,
     IPostService postService,
@@ -35,12 +33,12 @@ public class AppUserService(
     {
         if (string.IsNullOrWhiteSpace(userId))
             throw new BadRequestException("UserId is required");
-        var user = await repository.GetByIdAsync(userId);
+        var user = await appUserRepository.GetByIdAsync(userId);
         if (user == null)
             throw new UserNotFoundException();
 
         var template = appUser.UserName.Trim();
-        if (await repository.AnyAsync(n => n.UserName == template && n.Id != userId))
+        if (await appUserRepository.AnyAsync(n => n.UserName == template && n.Id != userId))
             throw new UserAlreadyExistsException("This username already taken");
 
         if (appUser.ProfilePicture != null)
@@ -63,7 +61,7 @@ public class AppUserService(
     public async Task<AuthResponse> SignUpAsync(AppUserSignUpDto appUser)
     {
         var template = appUser.UserName.Trim();
-        var isExists = await repository.AnyAsync(u =>
+        var isExists = await appUserRepository.AnyAsync(u =>
             u.UserName != null && u.UserName.Trim() == template);
         if (isExists)
             throw new UserAlreadyExistsException("This username already taken, try a different one");
@@ -94,7 +92,7 @@ public class AppUserService(
     public async Task<bool> DeleteAsync(string userId)
     {
         //TODO:FIX TS METHOD AFTER DEALING WITH ALL RELATED STUFF (FOLLOWERS,FOLLOWING,COMMENTS AND ETC.) OR PMO
-        var user = await repository.GetByIdAsync(userId);
+        var user = await appUserRepository.GetByIdAsync(userId);
         if (user == null)
             throw new UserNotFoundException();
         if (!string.IsNullOrWhiteSpace(user.ProfilePictureUri))
@@ -109,7 +107,7 @@ public class AppUserService(
         Func<IQueryable<AppUser>, IIncludableQueryable<AppUser, object>>? include = null,
         bool tracking = true)
     {
-        var user = await repository.GetByIdAsync(id, include, tracking)
+        var user = await appUserRepository.GetByIdAsync(id, include, tracking)
                    ?? throw new UserNotFoundException();
 
         var userPosts = await postService.FindAsync(p => p.UserId == user.Id && p.Status == "Published",
@@ -128,10 +126,10 @@ public class AppUserService(
             : null;
 
         var orderedSavedPostsDto = orderedSavedPosts.Select(post => post.MapToPostDto(
-            blobService.GetBlobSasUri(post.Media),user.UserName!,
+            blobService.GetBlobSasUri(post.Media), user.UserName!,
             post.Tags.Select(m => m.Name).ToList(),
             post.LikedBy.FirstOrDefault(m => m.UserId == user.Id) is not null,
-            true,profilePicUri)).ToList();
+            true, profilePicUri)).ToList();
 
         return user.MapToAppUserDto(profilePicUri, orderedPosts, orderedSavedPostsDto);
     }
@@ -151,7 +149,7 @@ public class AppUserService(
             .Include(au => au.CommentLikes)
             .Include(au => au.Comments);
 
-        var users = await repository.GetAllAsync(page, pageSize, tracking, includeFunc);
+        var users = await appUserRepository.GetAllAsync(page, pageSize, tracking, includeFunc);
         users = users.ToList();
         if (!users.Any())
             return [];
@@ -193,7 +191,7 @@ public class AppUserService(
     public async Task<IEnumerable<AppUserDto?>> Find(Expression<Func<AppUser, bool>> predicate,
         Func<IQueryable<AppUser>, IIncludableQueryable<AppUser, object>>? include = null, bool tracking = true)
     {
-        var data = await repository.FindAsync(predicate, include, tracking);
+        var data = await appUserRepository.FindAsync(predicate, include, tracking);
         var returnDtos = new List<AppUserDto>();
         if (!data.Any()) return returnDtos;
         foreach (var appUser in data)
@@ -212,13 +210,23 @@ public class AppUserService(
         return returnDtos;
     }
 
+    public async Task<IEnumerable<AppUserContextDto?>> SearchAsync(string? searchText)
+    {
+        var data = await appUserRepository.FindAsync(m => searchText != null && m.UserName!.Contains(searchText),
+            tracking: false);
+        return data.Select(m =>
+            m?.MapToAppUserContextDto(m.ProfilePictureUri is not null
+                ? blobService.GetBlobSasUri(m.ProfilePictureUri)
+                : null));
+    }
+
     public async Task ChangePrivacy(string userId)
     {
-        var user = await repository.GetByIdAsync(userId);
+        var user = await appUserRepository.GetByIdAsync(userId);
         if (user == null)
             throw new UserNotFoundException();
         user.IsPrivate = !user.IsPrivate;
-        await repository.UpdateAsync(user);
+        await appUserRepository.UpdateAsync(user);
     }
 
     public async Task<bool> VerifyPassword(string userId, string password)

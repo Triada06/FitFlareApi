@@ -186,6 +186,25 @@ public class PostService(
             m.User.ProfilePictureUri is not null ? blobService.GetBlobSasUri(m.User.ProfilePictureUri) : null));
     }
 
+    public async Task<IEnumerable<PostDto?>> GetByTagAsync(string tagId, string userId)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new UserNotFoundException();
+        var posts = await postRepository.FindAsync(m => m.Tags.Any(t => t.Id == tagId),
+            i => i
+                .Include(m => m.Comments)
+                .Include(m => m.User)
+                .Include(m => m.LikedBy)
+                .Include(m => m.LikedBy)
+                .Include(m => m.Comments)
+                .Include(m => m.Tags), false);
+        return posts.Select(m => m?.MapToPostDto(blobService.GetBlobSasUri(m.Media), m.User.UserName!,
+            m.Tags.Select(t => t.Name).ToList(),
+            m.LikedBy.Any(l => l.UserId == userId), m.SavedBy.Any(l => l.UserId == userId),
+            m.User.ProfilePictureUri is not null ? blobService.GetBlobSasUri(m.User.ProfilePictureUri) : null));
+    }
+
     public async Task<IEnumerable<PostDto?>> FindAsync(Expression<Func<Post, bool>> predicate,
         Func<IQueryable<Post>, IIncludableQueryable<Post, object>>? include = null, bool tracking = true,
         string userIdForLikeChecking = "")

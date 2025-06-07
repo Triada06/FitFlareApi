@@ -1,4 +1,4 @@
-﻿using FitFlare.Application.DTOs.AppUserDTos;
+﻿using FitFlare.Application.DTOs.AppUser;
 using FitFlare.Application.DTOs.Posts;
 using FitFlare.Core.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -47,6 +47,16 @@ public static class AppUserMapping
         {
             UserName = userToMap.UserName,
             Email = userToMap.Email,
+        };
+    }
+
+    public static AppUserContextDto MapToAppUserContextDto(this AppUser appUser, string? profilePictureUri = null)
+    {
+        return new AppUserContextDto
+        {
+            Id = appUser.Id,
+            ProfilePictureUri = profilePictureUri,
+            UserName = appUser.UserName!,
         };
     }
 }

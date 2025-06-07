@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using FitFlare.Application.Contracts.Requests;
 using FitFlare.Application.Contracts.Responses;
-using FitFlare.Application.DTOs.AppUserDTos;
+using FitFlare.Application.DTOs.AppUser;
 using FitFlare.Core.Entities;
 using Microsoft.EntityFrameworkCore.Query;
 
@@ -16,13 +16,11 @@ public interface IAppUserService
 
     public Task<AppUserDto?> GetById(string id, Func<IQueryable<AppUser>,
         IIncludableQueryable<AppUser, object>>? include = null, bool tracking = true);
-
     public Task<IEnumerable<AppUserDto>> GetAll(int page, string? sort, int pageSize = 5, bool tracking = true,
         string? searchText = null);
-
     public Task<IEnumerable<AppUserDto?>> Find(Expression<Func<AppUser, bool>> predicate, Func<IQueryable<AppUser>,
         IIncludableQueryable<AppUser, object>>? include = null, bool tracking = true);
-    
+    public Task<IEnumerable<AppUserContextDto?>> SearchAsync(string? searchText);
     public Task ChangePrivacy(string userId);
     public Task<bool> VerifyPassword(string userId, string password);
     public Task<bool> ChangePassword(string userId,PasswordChangeRequest request);

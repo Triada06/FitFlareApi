@@ -16,8 +16,9 @@ public static class ApiEndPoints
         public const string EditProfilePrivacy = $"{Base}/me/changeprivacy";
         public const string VerifyPassword = $"{Base}/me/verifypassword";
         public const string ChangePassword = $"{Base}/me/security/changepassword";
+        public const string Search = $"{Base}/search";
     }
-    
+
     public static class Post
     {
         private const string Base = $"{ApiBase}/post";
@@ -30,6 +31,7 @@ public static class ApiEndPoints
         public const string UnLike = $"{Base}/{{id}}/unlike";
         public const string Save = $"{Base}/{{id}}/save";
         public const string UnSave = $"{Base}/{{id}}/unsave";
+        public const string GetByTag = $"{Base}/bytag/{{tagId}}";
     }
 
     public static class Comment
@@ -45,6 +47,11 @@ public static class ApiEndPoints
         public const string Replies = $"{Base}/{{parentCommentId}}/replies";
         public const string Like = $"{Base}/{{id}}/like";
         public const string UnLike = $"{Base}/{{id}}/unlike";
+    }
 
+    public static class Tag
+    {
+        private const string Base = $"{ApiBase}/tag";
+        public const string Search = $"{Base}/search";
     }
 }

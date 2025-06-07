@@ -1,6 +1,4 @@
-﻿using FitFlare.Application.DTOs.AppUserDTos;
-
-namespace FitFlare.Application.Contracts.Responses;
+﻿namespace FitFlare.Application.Contracts.Responses;
 
 public class AuthResponse
 {

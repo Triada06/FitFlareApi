@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using FitFlare.Application.DTOs.Tag;
 using FitFlare.Core.Entities;
 using Microsoft.EntityFrameworkCore.Query;
 
@@ -11,4 +12,5 @@ public interface ITagService
 
     public Task<IEnumerable<Tag?>> FindAsync(Expression<Func<Tag, bool>> predicate, Func<IQueryable<Tag>,
         IIncludableQueryable<Tag, object>>? include = null, bool tracking = true);
+    public Task<IEnumerable<TagDto?>> SearchAsync(string? searchText);
 }

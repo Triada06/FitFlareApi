@@ -1,8 +1,6 @@
-﻿using FitFlare.Core.Entities;
-using FluentValidation;
-using Microsoft.AspNetCore.Http;
+﻿using FluentValidation;
 
-namespace FitFlare.Application.DTOs.AppUserDTos;
+namespace FitFlare.Application.DTOs.AppUser;
 
 public class AppUserSignUpDto
 {

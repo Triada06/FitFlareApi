@@ -52,6 +52,16 @@ public class PostController(IPostService postService, IWebHostEnvironment enviro
         return Ok(res);
     }
 
+    [HttpGet(ApiEndPoints.Post.GetByTag)]
+    public async Task<ActionResult<IEnumerable<PostDto>>> GetByTag([FromRoute] string tagId)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if(userId == null)
+            return Unauthorized();
+        var data = await postService.GetByTagAsync(tagId, userId);
+        return Ok(data);
+    }
+
     [HttpDelete(ApiEndPoints.Post.Delete)]
     public async Task<ActionResult> Delete([FromRoute] string id)
     {
@@ -73,7 +83,7 @@ public class PostController(IPostService postService, IWebHostEnvironment enviro
     }
 
     [HttpPut(ApiEndPoints.Post.Like)]
-    public async Task<ActionResult<PostDto>> Like([FromRoute] string id)
+    public async Task<ActionResult> Like([FromRoute] string id)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
@@ -83,7 +93,7 @@ public class PostController(IPostService postService, IWebHostEnvironment enviro
     }
 
     [HttpPut(ApiEndPoints.Post.UnLike)]
-    public async Task<ActionResult<PostDto>> UnLike([FromRoute] string id)
+    public async Task<ActionResult> UnLike([FromRoute] string id)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
@@ -93,7 +103,7 @@ public class PostController(IPostService postService, IWebHostEnvironment enviro
     }
 
     [HttpPut(ApiEndPoints.Post.Save)]
-    public async Task<ActionResult<PostDto>> Save([FromRoute] string id)
+    public async Task<ActionResult> Save([FromRoute] string id)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
@@ -103,7 +113,7 @@ public class PostController(IPostService postService, IWebHostEnvironment enviro
     }
 
     [HttpPut(ApiEndPoints.Post.UnSave)]
-    public async Task<ActionResult<PostDto>> UnSave([FromRoute] string id)
+    public async Task<ActionResult> UnSave([FromRoute] string id)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
