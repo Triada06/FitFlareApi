@@ -8,6 +8,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
 {
     public DbSet<Post> Posts { get; set; }
     public DbSet<Comment> Comments { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
     public DbSet<CommentLike> CommentLikes { get; set; }
     public DbSet<Story> Stories { get; set; }
     public DbSet<Follow> Follows { get; set; }

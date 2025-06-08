@@ -26,7 +26,10 @@ public static class AddAppServicesExtension
         services.AddScoped<ICommentRepository, CommentRepository>();
         services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<ICommentLikeRepository, CommentLikeRepository>();
-        
+        services.AddScoped<IFollowRepository, FollowRepository>();
+        services.AddScoped<IFollowService, FollowService>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<INotificationService, NotificationService>();
         //bg services
         services.AddHostedService<TempFileCleanupService>();
 

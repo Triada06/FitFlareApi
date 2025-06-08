@@ -107,7 +107,10 @@ public class AppUserService(
         Func<IQueryable<AppUser>, IIncludableQueryable<AppUser, object>>? include = null,
         bool tracking = true)
     {
-        var user = await appUserRepository.GetByIdAsync(id, include, tracking)
+        var user = await appUserRepository.GetByIdAsync(id, i => i
+                           .Include(m => m.Followers)
+                           .Include(m => m.Following),
+                       tracking)
                    ?? throw new UserNotFoundException();
 
         var userPosts = await postService.FindAsync(p => p.UserId == user.Id && p.Status == "Published",
@@ -147,7 +150,9 @@ public class AppUserService(
             .Include(au => au.Following)
             .Include(au => au.Followers)
             .Include(au => au.CommentLikes)
-            .Include(au => au.Comments);
+            .Include(au => au.Comments)
+            .Include(au => au.Followers)
+            .Include(au => au.Following);
 
         var users = await appUserRepository.GetAllAsync(page, pageSize, tracking, includeFunc);
         users = users.ToList();

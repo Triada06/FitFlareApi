@@ -10,6 +10,8 @@ public class AppUser : IdentityUser, IBaseEntity
     public bool IsBanned { get; set; }
     public bool IsPrivate { get; set; }
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
+
+    public ICollection<Notification> Notifications { get; set; } = [];
     public ICollection<PostSave> SavedPosts { get; set; } = [];
     public ICollection<PostLike> LikedPosts { get; set; } = [];
     public ICollection<Post> Posts { get; set; } = [];

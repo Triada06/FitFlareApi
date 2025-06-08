@@ -24,8 +24,8 @@ public static class AppUserMapping
             ProfilePictureUri = profilePictureUri ?? profilePictureUri,
             Posts = posts?.ToList() ?? [],
             SavedPosts = savedPosts?.ToList() ?? [],
-            FollowersCount = appUser.Followers.Count,
-            FollowingCount = appUser.Followers.Count,
+            FollowersCount = appUser.Followers.Count(m => m.FollowingId == appUser.Id),
+            FollowingCount = appUser.Following.Count(m=>m.FollowerId == appUser.Id),
         };
     }
 

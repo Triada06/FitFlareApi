@@ -3,6 +3,7 @@ using System;
 using FitFlare.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FitFlare.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250608101740_FollowNullFix")]
+    partial class FollowNullFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -193,36 +196,6 @@ namespace FitFlare.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Follows");
-                });
-
-            modelBuilder.Entity("FitFlare.Core.Entities.Notification", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("FitFlare.Core.Entities.Post", b =>
@@ -566,17 +539,6 @@ namespace FitFlare.Infrastructure.Migrations
                     b.Navigation("Following");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.Notification", b =>
-                {
-                    b.HasOne("FitFlare.Core.Entities.AppUser", "User")
-                        .WithMany("Notifications")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("FitFlare.Core.Entities.Post", b =>
                 {
                     b.HasOne("FitFlare.Core.Entities.AppUser", "User")
@@ -714,8 +676,6 @@ namespace FitFlare.Infrastructure.Migrations
                     b.Navigation("Following");
 
                     b.Navigation("LikedPosts");
-
-                    b.Navigation("Notifications");
 
                     b.Navigation("Posts");
 
