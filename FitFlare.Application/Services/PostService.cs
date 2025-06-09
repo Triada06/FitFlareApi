@@ -25,6 +25,7 @@ public class PostService(
     IPostLikeRepository postLikeRepository,
     IPostSaveRepository postSaveRepository,
     IConfiguration configuration,
+    IFollowRepository followRepository,
     INotificationService notificationService)
     : IPostService
 {
@@ -176,7 +177,7 @@ public class PostService(
             .Include(m => m.LikedBy)
             .Include(m => m.Comments)
             .Include(m => m.Tags), tracking);
-        
+
         if (data == null)
             throw new NotFoundException("post not found");
 
@@ -243,7 +244,7 @@ public class PostService(
         foreach (var post in data)
         {
             var postLike = await postLikeRepository.GetAsync(post!.Id, userIdForLikeChecking);
-            var postSave = await postSaveRepository.GetByIdAsync(post.UserId, post.Id);
+            var postSave = await postSaveRepository.GetByIdAsync(user.Id, post.Id);
 
             if (postLike != null)
             {
@@ -445,6 +446,34 @@ public class PostService(
 
         post.SaveCount--;
         await postRepository.UpdateAsync(post);
+    }
+
+    public async Task<IEnumerable<PostDto?>> GetFeed(string userId)
+    {
+        var user = await appUserRepository.GetByIdAsync(userId);
+        if (user is null)
+            throw new UserNotFoundException();
+        var userFollowings = await followRepository.FindAsync(m => m.FollowerId == userId, tracking: false);
+        if (!userFollowings.Any())
+            return [];
+        List<PostDto?> posts = [];
+        foreach (var userFollowing in userFollowings)
+        {
+            var data = await FindAsync(m => m.UserId == userFollowing!.FollowingId && m.Status=="Published", i => i
+                    .Include(m => m.Comments)
+                    .Include(m => m.User)
+                    .Include(m => m.LikedBy)
+                    .Include(m => m.LikedBy)
+                    .Include(m => m.SavedBy)
+                    .Include(m => m.Comments)
+                    .Include(m => m.Tags), false, userId
+            );
+            posts.AddRange(data);
+        }
+
+        if (!posts.Any()) return [];
+        posts = posts.OrderByDescending(m => m!.PostedWhen).ToList();
+        return posts;
     }
 
     public async Task DeleteDraftedMediaAsync()

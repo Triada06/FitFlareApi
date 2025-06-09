@@ -46,6 +46,12 @@ public class GlobalExceptionHandlerMiddleware : IExceptionHandler
                 Detail = ex.Message,
                 Status = StatusCodes.Status404NotFound
             },
+            InvalidLoginCredentialsException ex => new ProblemDetails
+            {
+                Title = "Invalid login credentials",
+                Detail = ex.Message,
+                Status = StatusCodes.Status404NotFound
+            },
             _ => new ProblemDetails
             {
                 Title = "Server Error",

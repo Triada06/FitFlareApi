@@ -25,5 +25,6 @@ public interface IPostService
     public Task UnlikePost(string postId, string userId);
     public Task SavePost (string postId, string userId);
     public Task UnSavePost(string postId, string userId);
+    public Task<IEnumerable<PostDto?>> GetFeed(string userId);
     public Task DeleteDraftedMediaAsync();
 }

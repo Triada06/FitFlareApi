@@ -134,4 +134,14 @@ public class PostController(IPostService postService, IWebHostEnvironment enviro
         var res = await postService.GetAll(userId, page, null, 15, false);
         return Ok(res);
     }
+
+    [HttpGet(ApiEndPoints.Post.Feed)]
+    public async Task<ActionResult<CommentDto[]>> GetFeed()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
+            return Unauthorized();
+        var data = await postService.GetFeed(userId);
+        return Ok(data);
+    }
 }

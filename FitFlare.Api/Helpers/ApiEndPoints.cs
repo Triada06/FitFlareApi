@@ -32,6 +32,7 @@ public static class ApiEndPoints
         public const string Save = $"{Base}/{{id}}/save";
         public const string UnSave = $"{Base}/{{id}}/unsave";
         public const string GetByTag = $"{Base}/bytag/{{tagId}}";
+        public const string Feed = $"{Base}/feed";
     }
 
     public static class Comment
