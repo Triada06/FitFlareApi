@@ -21,4 +21,11 @@ public class NotificationRepository(AppDbContext context)
         notification.IsRead = true;
         await _context1.SaveChangesAsync();
     }
+
+    public async Task RemoveRange(List<Notification?> notifications)
+    {
+        if (!notifications.Any()) return;
+        _context1.Notifications.RemoveRange(notifications!);
+        await _context1.SaveChangesAsync(); 
+    }
 }

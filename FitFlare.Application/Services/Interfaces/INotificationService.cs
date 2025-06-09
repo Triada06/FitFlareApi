@@ -9,6 +9,6 @@ public interface INotificationService
     public Task MarkAsReadAsync(string notificationId);
     public Task MarkAllAsReadAsync(string userId);
     public Task DeleteASync(string notificationId);
-    public Task<IEnumerable<Notification>> GetAllByUserIdAsync(string userId);
-    public Task<Notification?> GetByUserIdAsync(string userId);
+    public Task<IEnumerable<NotificationDto>> GetAllByUserIdAsync(string userId);
+    public Task<Notification?> GetByIdAsync(string userId);
 }

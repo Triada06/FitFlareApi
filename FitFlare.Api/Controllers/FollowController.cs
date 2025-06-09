@@ -34,6 +34,16 @@ public class FollowController(IFollowService followService) : ControllerBase
         return Ok();
     }
 
+    [HttpPost(ApiEndPoints.Follow.AcceptFollowRequest)]
+    public async Task<IActionResult> AcceptFollowRequest([FromRoute] string userId)
+    {
+        var authUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (authUserId is null)
+            return Unauthorized();
+        await followService.Follow(userId, authUserId);
+        return Ok();
+    }
+
     [HttpDelete(ApiEndPoints.Follow.UnFollowUser)]
     public async Task<IActionResult> UnFollowUser([FromRoute] string userId)
     {

@@ -14,10 +14,12 @@ public static class NotificationMapping
             Type = notification.Type,
             Message = notification.Message,
             AddressedUserId = notification.UserId,
+            TriggerUserId = notification.TriggeredById,
             TriggerUserName = triggerUserName,
             TriggerUserProfilePicture = triggerUserProfilePictureSasUrl,
             PostId = notification.Type is "Like" or "Comment" ? postId : null,
             PostMediaUri = notification.Type is "Like" or "Comment" ? postMediaUri : null,
+            CreatedAt = notification.CreatedAt,
             IsRead = notification.IsRead
         };
     }

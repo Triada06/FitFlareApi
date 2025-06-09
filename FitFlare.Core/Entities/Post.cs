@@ -14,6 +14,7 @@ public class Post : BaseEntity
     public string UserId { get; set; }
     public AppUser User { get; set; }
 
+    public ICollection<Notification> Notifications { get; set; } = [];
     public ICollection<PostSave> SavedBy { get; set; } = [];
     public ICollection<PostLike> LikedBy { get; set; } = [];
     public ICollection<Comment> Comments { get; set; } = [];    

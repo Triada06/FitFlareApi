@@ -48,7 +48,10 @@ public class PostController(IPostService postService, IWebHostEnvironment enviro
     [HttpGet(ApiEndPoints.Post.GetById)]
     public async Task<ActionResult<PostDto>> GetById([FromRoute] string id)
     {
-        var res = await postService.GetById(id);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
+            return Unauthorized();
+        var res = await postService.GetByIdAsync(id, userId);
         return Ok(res);
     }
 
@@ -56,7 +59,7 @@ public class PostController(IPostService postService, IWebHostEnvironment enviro
     public async Task<ActionResult<IEnumerable<PostDto>>> GetByTag([FromRoute] string tagId)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if(userId == null)
+        if (userId == null)
             return Unauthorized();
         var data = await postService.GetByTagAsync(tagId, userId);
         return Ok(data);

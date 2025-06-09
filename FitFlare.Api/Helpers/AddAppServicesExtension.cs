@@ -3,6 +3,7 @@ using FitFlare.Api.BackgroundServices;
 using FitFlare.Application.Services;
 using FitFlare.Application.Services.Interfaces;
 using FitFlare.Application.Services.Shared;
+using FitFlare.Infrastructure.BackgroundServices;
 using FitFlare.Infrastructure.Repositories;
 using FitFlare.Infrastructure.Repositories.Interfaces;
 
@@ -30,8 +31,11 @@ public static class AddAppServicesExtension
         services.AddScoped<IFollowService, FollowService>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<INotificationService, NotificationService>();
+        
+        
         //bg services
         services.AddHostedService<TempFileCleanupService>();
+        services.AddHostedService<OldNotificationsCleanUpService>();
 
         return services;
     }

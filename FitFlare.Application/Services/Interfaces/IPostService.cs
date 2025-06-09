@@ -11,7 +11,7 @@ public interface IPostService
     public Task<PostDto> CreateAsync(PostCreateDto post);
     public Task<bool> DeleteAsync(string postId, string userId);
 
-    public Task<PostDto?> GetById(string id, Func<IQueryable<Post>,
+    public Task<PostDto?> GetByIdAsync(string id,string userId, Func<IQueryable<Post>,
         IIncludableQueryable<AppUser, object>>? include = null, bool tracking = true);
 
     public Task<IEnumerable<PostDto>> GetAll(string userId,int page, string? sort, int pageSize = 5, bool tracking = true);

@@ -5,6 +5,7 @@ using FitFlare.Application.Services.Interfaces;
 using FitFlare.Core.Constants;
 using FitFlare.Core.Entities;
 using FitFlare.Infrastructure.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace FitFlare.Application.Services.Shared;
 
@@ -23,6 +24,8 @@ public class NotificationService(
         {
             UserId = request.AddressedUserId,
             Type = request.NotificationType,
+            TriggeredById = request.TriggeredUserId,
+            PostId = request.PostId,
             Message = GenerateNotificationMessage(request.NotificationType),
             IsRead = false
         };
@@ -60,14 +63,54 @@ public class NotificationService(
         await notificationRepository.DeleteAsync(notification);
     }
 
-    public Task<IEnumerable<Notification>> GetAllByUserIdAsync(string userId)
+    public async Task<IEnumerable<NotificationDto>> GetAllByUserIdAsync(string userId)
     {
-        throw new NotImplementedException();
+        var user = await userRepository.GetByIdAsync(userId);
+        if (user == null)
+            throw new UserNotFoundException();
+
+        var notifications = await notificationRepository.FindAsync(
+            m => m.UserId == userId,
+            i => i
+                .Include(m => m.TriggeredBy)
+                .Include(m => m.Post)
+        );
+
+        if (!notifications.Any())
+            return [];
+    
+        notifications = notifications.OrderByDescending(m=>m?.CreatedAt).ToList();
+        return notifications.Select(n =>
+        {
+            var profilePicUri = n.TriggeredBy.ProfilePictureUri != null
+                ? blobService.GetBlobSasUri(n.TriggeredBy.ProfilePictureUri)
+                : null;
+
+            string? postId = null;
+            string? postMediaUri = null;
+
+            if (n.Type is "Like" or "Comment" && n.Post != null)
+            {
+                postId = n.PostId;
+                postMediaUri = blobService.GetBlobSasUri(n.Post.Media);
+            }
+
+            return n.MapToNotificationDto(
+                n.TriggeredBy.UserName!,
+                profilePicUri,
+                postId,
+                postMediaUri
+            );
+        });
     }
 
-    public Task<Notification?> GetByUserIdAsync(string userId)
+
+    public async Task<Notification?> GetByIdAsync(string notificationId)
     {
-        throw new NotImplementedException();
+        var data = await notificationRepository.GetByIdAsync(notificationId);
+        if (data is null)
+            throw new NotFoundException($"Notification was not found");
+        return data;
     }
 
     private static string GenerateNotificationMessage(string type) =>

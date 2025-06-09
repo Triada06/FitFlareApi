@@ -62,13 +62,17 @@ public static class ApiEndPoints
         public const string UnFollowUser = $"{Base}/{{userId}}";
         public const string GetFollowersByIdUserId = $"{Base}/{{userId}}/followers";
         public const string GetFollowingsByIdUserId = $"{Base}/{{userId}}/followings";
+        public const string AcceptFollowRequest = $"{Base}/{{userId}}/acceptfollowrequest";
     }
 
     public static class Notification
     {
         private const string Base = $"{ApiBase}/notification";
+        public const string Create = $"{Base}";
         public const string Delete = $"{Base}/{{id}}";
-        public const string MarkAsRead = $"{Base}/{{id}}";
+        public const string MarkAsRead = $"{Base}/{{id}}/markasread";
         public const string MarkAllAsRead = $"{Base}/markallasread";
+        public const string GetAllByUserId = $"{Base}";
+        public const string GetById = $"{Base}/{{id}}";
     }
 }

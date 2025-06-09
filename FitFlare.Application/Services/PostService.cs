@@ -1,8 +1,10 @@
 ﻿using System.Linq.Expressions;
+using FitFlare.Application.DTOs.Notification;
 using FitFlare.Application.DTOs.Posts;
 using FitFlare.Application.Helpers.Exceptions;
 using FitFlare.Application.Mappings;
 using FitFlare.Application.Services.Interfaces;
+using FitFlare.Core.Constants;
 using FitFlare.Core.Entities;
 using FitFlare.Infrastructure.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -22,7 +24,8 @@ public class PostService(
     UserManager<AppUser> userManager,
     IPostLikeRepository postLikeRepository,
     IPostSaveRepository postSaveRepository,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    INotificationService notificationService)
     : IPostService
 {
     public async Task<bool> UpdateAsync(PostUpdateDto post, string postId, string userId)
@@ -159,10 +162,28 @@ public class PostService(
         return await postRepository.DeleteAsync(userPost);
     }
 
-    public Task<PostDto?> GetById(string id,
+    public async Task<PostDto?> GetByIdAsync(string id, string userId,
         Func<IQueryable<Post>, IIncludableQueryable<AppUser, object>>? include = null, bool tracking = true)
     {
-        throw new NotImplementedException();
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new UserNotFoundException();
+
+        var data = await postRepository.GetByIdAsync(id, i => i
+            .Include(m => m.Comments)
+            .Include(m => m.User)
+            .Include(m => m.LikedBy)
+            .Include(m => m.LikedBy)
+            .Include(m => m.Comments)
+            .Include(m => m.Tags), tracking);
+        
+        if (data == null)
+            throw new NotFoundException("post not found");
+
+        return data.MapToPostDto(blobService.GetBlobSasUri(data.Media), data.User.UserName!,
+            data.Tags.Select(t => t.Name).ToList(),
+            data.LikedBy.Any(l => l.UserId == userId), data.SavedBy.Any(l => l.UserId == userId),
+            data.User.ProfilePictureUri is not null ? blobService.GetBlobSasUri(data.User.ProfilePictureUri) : null);
     }
 
     public async Task<IEnumerable<PostDto>> GetAll(string userId, int page, string? sort, int pageSize = 5,
@@ -180,7 +201,8 @@ public class PostService(
             .Include(m => m.Comments)
             .Include(m => m.Tags));
 
-        return data.Select(m => m.MapToPostDto(blobService.GetBlobSasUri(m.Media), m.User.UserName!,
+        return data.Where(m => !m.User.IsPrivate).Select(m => m.MapToPostDto(blobService.GetBlobSasUri(m.Media),
+            m.User.UserName!,
             m.Tags.Select(t => t.Name).ToList(),
             m.LikedBy.Any(l => l.UserId == userId), m.SavedBy.Any(l => l.UserId == userId),
             m.User.ProfilePictureUri is not null ? blobService.GetBlobSasUri(m.User.ProfilePictureUri) : null));
@@ -331,7 +353,14 @@ public class PostService(
             LikedAt = DateTime.UtcNow
         };
         await postLikeRepository.AddAsync(like);
-
+        await notificationService.CreateAsync(new CreateNotificationRequest
+        {
+            AddressedUserId = post.UserId,
+            PostId = postId,
+            PostMediaUri = blobService.GetBlobSasUri(post.Media),
+            NotificationType = nameof(NotificationTypes.Like),
+            TriggeredUserId = userId,
+        });
         post.LikeCount++;
         await postRepository.UpdateAsync(post);
     }
@@ -354,15 +383,19 @@ public class PostService(
             throw new BadRequestException("Post or user id is wrong");
         await postLikeRepository.RemoveAsync(postLike);
 
-        if (post.LikeCount == 1)
+        switch (post.LikeCount)
         {
-            post.LikeCount = 0;
-            await postRepository.UpdateAsync(post);
-            return;
+            case 0:
+                return;
+            case 1:
+                post.LikeCount = 0;
+                await postRepository.UpdateAsync(post);
+                return;
+            default:
+                post.LikeCount--;
+                await postRepository.UpdateAsync(post);
+                break;
         }
-
-        post.LikeCount--;
-        await postRepository.UpdateAsync(post);
     }
 
     public async Task SavePost(string postId, string userId)

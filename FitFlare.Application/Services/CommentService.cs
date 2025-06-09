@@ -1,7 +1,9 @@
 ﻿using FitFlare.Application.DTOs.Comment;
+using FitFlare.Application.DTOs.Notification;
 using FitFlare.Application.Helpers.Exceptions;
 using FitFlare.Application.Mappings;
 using FitFlare.Application.Services.Interfaces;
+using FitFlare.Core.Constants;
 using FitFlare.Core.Entities;
 using FitFlare.Infrastructure.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -14,7 +16,9 @@ public class CommentService(
     ICommentRepository commentRepository,
     UserManager<AppUser> userManager,
     ICommentLikeRepository commentLikeRepository,
-    IBlobService blobService) : ICommentService
+    IPostRepository postRepository,
+    IBlobService blobService,
+    INotificationService notificationService) : ICommentService
 {
     public async Task<CommentDto> CreateAsync(CommentCreateDto commentDto, string userId)
     {
@@ -23,6 +27,17 @@ public class CommentService(
             throw new UserNotFoundException();
         var comment = commentDto.MapToComment(userId);
         await commentRepository.CreateAsync(comment);
+        var post = await postRepository.GetByIdAsync(comment.PostId);
+        if(post == null)
+            throw new NotFoundException("post not found");
+        await notificationService.CreateAsync(new CreateNotificationRequest
+        {
+            NotificationType = nameof(NotificationTypes.Comment),
+            AddressedUserId = post.UserId,
+            TriggeredUserId = userId,
+            PostId = commentDto.PostId,
+            PostMediaUri = blobService.GetBlobSasUri(post.Media)
+        });
         return comment.MapToCommentDto(user.ProfilePictureUri is not null
             ? blobService.GetBlobSasUri(user.ProfilePictureUri)
             : null, userId);
@@ -49,7 +64,7 @@ public class CommentService(
             throw new InternalServerErrorException("Comment deleted");
     }
 
-    public async Task<CommentDto?> GetById(string id,string userId,
+    public async Task<CommentDto?> GetById(string id, string userId,
         Func<IQueryable<Comment>, IIncludableQueryable<Comment, object>>? include = null, bool tracking = true)
     {
         var data = await commentRepository.GetByIdAsync(id, i => i
@@ -59,26 +74,27 @@ public class CommentService(
             .Include(m => m.Replies), tracking);
         return data?.MapToCommentDto(data.User.ProfilePictureUri is not null
             ? blobService.GetBlobSasUri(data.User.ProfilePictureUri)
-            : null,userId);
+            : null, userId);
     }
 
-    public async Task<IEnumerable<CommentDto>> GetAllByPostId(string postId,string userId, int page,
+    public async Task<IEnumerable<CommentDto>> GetAllByPostId(string postId, string userId, int page,
         int pageSize = 20, bool tracking = true)
     {
         var data = await commentRepository.GetAllByPostId(postId, page, pageSize, tracking);
         return data.Select(m =>
             m.MapToCommentDto(m.User.ProfilePictureUri is not null
                 ? blobService.GetBlobSasUri(m.User.ProfilePictureUri)
-                : null,userId));
+                : null, userId));
     }
 
-    public async Task<IEnumerable<CommentDto>> LoadReplies(string postId,string userId, string parentCommentId, int page,
+    public async Task<IEnumerable<CommentDto>> LoadReplies(string postId, string userId, string parentCommentId,
+        int page,
         int pageSize = 20, bool tracking = true)
     {
         var data = await commentRepository.LoadReplies(postId, parentCommentId, page, pageSize, tracking);
         return data.Select(m => m.MapToCommentDto(m.User.ProfilePictureUri is not null
             ? blobService.GetBlobSasUri(m.User.ProfilePictureUri)
-            : null,userId));
+            : null, userId));
     }
 
     public async Task LikeComment(string commentId, string userId)

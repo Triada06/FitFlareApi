@@ -79,6 +79,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             .HasForeignKey(c => c.ParentCommentId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        //notification relation management
+        builder.Entity<Notification>()
+            .HasOne(n => n.TriggeredBy)
+            .WithMany()
+            .HasForeignKey(n => n.TriggeredById)
+            .OnDelete(DeleteBehavior.Restrict); 
+        
+        builder.Entity<Notification>()
+            .HasOne(n => n.Post)
+            .WithMany(p => p.Notifications)
+            .HasForeignKey(n => n.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        
         // Property constraints
         builder.Entity<Comment>()
             .Property(m => m.Content)

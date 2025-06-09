@@ -1,7 +1,9 @@
 ﻿using FitFlare.Application.DTOs.AppUser;
+using FitFlare.Application.DTOs.Notification;
 using FitFlare.Application.Helpers.Exceptions;
 using FitFlare.Application.Mappings;
 using FitFlare.Application.Services.Interfaces;
+using FitFlare.Core.Constants;
 using FitFlare.Core.Entities;
 using FitFlare.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +13,8 @@ namespace FitFlare.Application.Services;
 public class FollowService(
     IFollowRepository followRepository,
     IAppUserRepository appUserRepository,
-    IBlobService blobService) : IFollowService
+    IBlobService blobService,
+    INotificationService notificationService) : IFollowService
 {
     public async Task<IEnumerable<AppUserContextDto>?> GetFollowersByIdFollowingId(string followingId)
     {
@@ -48,6 +51,14 @@ public class FollowService(
         if (await followRepository.AnyAsync(m => m.FollowerId == follower.Id && m.FollowingId == following.Id))
             throw new BadRequestException("This user is already following");
         await followRepository.CreateAsync(new Follow { FollowerId = follower.Id, FollowingId = following.Id });
+        await notificationService.CreateAsync(new CreateNotificationRequest
+        {
+            NotificationType = nameof(NotificationTypes.Follow),
+            AddressedUserId = followingId,
+            TriggeredUserId = followerId,
+            PostId = null,
+            PostMediaUri = null
+        });
     }
 
     public async Task UnFollow(string followerId, string followingId)
