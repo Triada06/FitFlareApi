@@ -38,6 +38,7 @@ public static class AddAppServicesExtension
         //bg services
         services.AddHostedService<TempFileCleanupService>();
         services.AddHostedService<OldNotificationsCleanUpService>();
+        services.AddHostedService<StoryCleanUpService>();
 
         return services;
     }

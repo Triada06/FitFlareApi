@@ -99,6 +99,7 @@ public class StoryService(
                 Stories = stories
             });
         }
+
         return storyComponents;
     }
 
@@ -110,6 +111,10 @@ public class StoryService(
         var user = await userRepository.GetByIdAsync(userId, tracking: false);
         if (user == null)
             throw new UserNotFoundException();
+
+        if (await viewRepository.AnyAsync(storyId, userId))
+            return;
+
         await viewRepository.CreateAsync(new StoryView
         {
             StoryId = storyId,

@@ -27,4 +27,7 @@ public class StoryViewRepository(AppDbContext context) : IStoryViewRepository
         query = query.Where(m => m.StoryId == storyId);
         return await query.Select(m => m.User).ToListAsync();
     }
+
+    public async Task<bool> AnyAsync(string storyId, string userId) =>
+        await context.StoryViews.AnyAsync(m => m.StoryId == storyId && m.UserId == userId);
 }
