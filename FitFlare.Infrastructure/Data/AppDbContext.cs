@@ -15,11 +15,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Tag> Tags { get; set; }
     public DbSet<PostLike> PostLikes { get; set; }
     public DbSet<PostSave> PostSaves { get; set; }
+    public DbSet<StoryView> StoryViews { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
 
+        builder.Entity<StoryView>()
+            .HasKey(sv => new { sv.UserId, sv.StoryId });
+        
         // Follow relationship
         builder.Entity<Follow>()
             .HasOne(f => f.Follower)

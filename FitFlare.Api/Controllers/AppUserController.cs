@@ -5,6 +5,7 @@ using FitFlare.Application.DTOs.AppUser;
 using FitFlare.Application.Services;
 using FitFlare.Application.Services.Interfaces;
 using FitFlare.Core;
+using FitFlare.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,7 @@ namespace FitFlare.Api.Controllers;
 
 [Authorize(Roles = "Member,Admin,Owner")]
 [ApiController]
-public class AppUserController(IAppUserService appUserService, RoleManager<IdentityRole> roleManager) : ControllerBase
+public class AppUserController(IAppUserService appUserService, IStoryService storyService) : ControllerBase
 {
     [HttpGet(ApiEndPoints.AppUser.GetById)]
     public async Task<IActionResult> GetById([FromRoute] string id)
@@ -84,6 +85,14 @@ public class AppUserController(IAppUserService appUserService, RoleManager<Ident
         await appUserService.ChangePrivacy(userId);
         return Ok();
     }
+
+    [HttpGet(ApiEndPoints.AppUser.Stories)]
+    public async Task<IActionResult> GetStories([FromRoute] string id)
+    {
+        var data = await storyService.GetAllStoriesByUserId(id);
+        return Ok(data);
+    }
+    
 
     [HttpPost(ApiEndPoints.AppUser.VerifyPassword)]
     public async Task<IActionResult> VerifyPassword([FromBody] PasswordVerifyRequest passwordDto)

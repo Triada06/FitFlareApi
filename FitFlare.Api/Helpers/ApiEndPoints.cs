@@ -17,6 +17,7 @@ public static class ApiEndPoints
         public const string VerifyPassword = $"{Base}/me/verifypassword";
         public const string ChangePassword = $"{Base}/me/security/changepassword";
         public const string Search = $"{Base}/search";
+        public const string Stories = $"{Base}/{{id}}/stories";
     }
 
     public static class Post
@@ -33,6 +34,7 @@ public static class ApiEndPoints
         public const string UnSave = $"{Base}/{{id}}/unsave";
         public const string GetByTag = $"{Base}/bytag/{{tagId}}";
         public const string Feed = $"{Base}/feed";
+
     }
 
     public static class Comment
@@ -75,5 +77,16 @@ public static class ApiEndPoints
         public const string MarkAllAsRead = $"{Base}/markallasread";
         public const string GetAllByUserId = $"{Base}";
         public const string GetById = $"{Base}/{{id}}";
+    }
+
+    public static class Story
+    {
+        private const string Base = $"{ApiBase}/story";
+        public const string Create = $"{Base}";
+        public const string Delete = $"{Base}/{{id}}";
+        public const string GetById = $"{Base}/{{id}}";
+        public const string GetViewers = $"{Base}/{{id}}/viewers";
+        public const string View = $"{Base}/{{id}}/view";
+        public const string AuthUserStories = $"{Base}";
     }
 }

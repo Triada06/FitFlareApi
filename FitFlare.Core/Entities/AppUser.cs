@@ -18,7 +18,7 @@ public class AppUser : IdentityUser, IBaseEntity
     public ICollection<Comment> Comments { get; set; } = []; //user's comments
     public ICollection<CommentLike> CommentLikes { get; set; } = []; //which comments user liked
 
-    public ICollection<Story> Stories { get; set; } = [];
+    public ICollection<StoryView> Stories { get; set; } = [];
     public ICollection<Follow> Followers { get; set; } = []; // people following ME
     public ICollection<Follow> Following { get; set; } = []; // people I am following
 }

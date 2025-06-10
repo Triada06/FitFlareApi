@@ -31,7 +31,9 @@ public static class AddAppServicesExtension
         services.AddScoped<IFollowService, FollowService>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<INotificationService, NotificationService>();
-        
+        services.AddScoped<IStoryViewRepository, StoryViewRepository>();
+        services.AddScoped<IStoryRepository, StoryRepository>();
+        services.AddScoped<IStoryService, StoryService>();
         
         //bg services
         services.AddHostedService<TempFileCleanupService>();
