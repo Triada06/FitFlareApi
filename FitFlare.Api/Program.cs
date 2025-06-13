@@ -1,8 +1,10 @@
+using System.Security.Claims;
 using System.Text;
 using Azure.Storage.Blobs;
 using DotNetEnv;
 using FitFlare.Api;
 using FitFlare.Api.Helpers;
+using FitFlare.Api.Hubs;
 using FitFlare.Application.Helpers;
 using FitFlare.Application.Services;
 using FitFlare.Application.Services.Interfaces;
@@ -35,14 +37,19 @@ builder.Services.Configure<BlobStorageOptions>(options =>
 );
 
 // CORS Policy
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy.AllowAnyOrigin() //  Change this in prod
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:5173")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials(); // crucial for SignalR with accessToken
+        });
 });
 
 // Swagger & API
@@ -74,10 +81,9 @@ builder.Services.AddSwaggerGen(opt =>
     });
 });
 
-
-// Dependency Injection (split later into static if you want)
 builder.Services.AddSingleton(_ => new BlobServiceClient(blobConn));
-builder.Services.AddAppServices();
+builder.Services.AddAppServices(); //dependency injections 
+builder.Services.AddSignalR();
 
 // Validation
 builder.Services.AddExceptionHandler<GlobalExceptionHandlerMiddleware>();
@@ -98,7 +104,7 @@ builder.Services.AddIdentityCore<AppUser>(options =>
         options.Password.RequireLowercase = true;
         options.Password.RequireUppercase = true;
         options.Password.RequiredLength = 8;
-        options.Password.RequireNonAlphanumeric = false; 
+        options.Password.RequireNonAlphanumeric = false;
 
 
         options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
@@ -114,12 +120,11 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
     options.Password.RequiredLength = 8;
-    options.Password.RequireNonAlphanumeric = false; 
+    options.Password.RequireNonAlphanumeric = false;
 
     options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
     options.User.RequireUniqueEmail = true;
 });
-
 
 
 var jwtSettings = config.GetSection("Jwt");
@@ -135,9 +140,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtSettings["Issuer"],
             ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"])),
+            NameClaimType = ClaimTypes.NameIdentifier
         };
     });
+
 
 
 builder.Services.AddAuthorization();
@@ -145,7 +152,9 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+
 // Middleware
+app.UseCors(MyAllowSpecificOrigins); 
 app.UseStaticFiles();
 app.UseRouting();
 
@@ -156,12 +165,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseHttpsRedirection();
 app.UseExceptionHandler();
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();
 return;

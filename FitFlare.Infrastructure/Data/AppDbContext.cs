@@ -16,6 +16,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<PostLike> PostLikes { get; set; }
     public DbSet<PostSave> PostSaves { get; set; }
     public DbSet<StoryView> StoryViews { get; set; }
+    public DbSet<Message> Messages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

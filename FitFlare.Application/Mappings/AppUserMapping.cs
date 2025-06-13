@@ -1,4 +1,5 @@
 ﻿using FitFlare.Application.DTOs.AppUser;
+using FitFlare.Application.DTOs.Chat;
 using FitFlare.Application.DTOs.Posts;
 using FitFlare.Core.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -25,7 +26,7 @@ public static class AppUserMapping
             Posts = posts?.ToList() ?? [],
             SavedPosts = savedPosts?.ToList() ?? [],
             FollowersCount = appUser.Followers.Count(m => m.FollowingId == appUser.Id),
-            FollowingCount = appUser.Following.Count(m=>m.FollowerId == appUser.Id),
+            FollowingCount = appUser.Following.Count(m => m.FollowerId == appUser.Id),
         };
     }
 
@@ -57,6 +58,19 @@ public static class AppUserMapping
             Id = appUser.Id,
             ProfilePictureUri = profilePictureUri,
             UserName = appUser.UserName!,
+        };
+    }
+
+    public static ChatDto MapToChatDto(this AppUser appUser, string? profilePictureUri, string? lastMessage,
+        DateTime? lastMessageDate)
+    {
+        return new ChatDto
+        {
+            Id = appUser.Id,
+            ChatPicture = profilePictureUri,
+            FullNameOrUserName = appUser.FullName ?? appUser.UserName!,
+            LastMessage = null,
+            LastMessageTime = lastMessageDate
         };
     }
 }

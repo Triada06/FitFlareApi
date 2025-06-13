@@ -34,7 +34,9 @@ public static class AddAppServicesExtension
         services.AddScoped<IStoryViewRepository, StoryViewRepository>();
         services.AddScoped<IStoryRepository, StoryRepository>();
         services.AddScoped<IStoryService, StoryService>();
-        
+        services.AddScoped<IMessageRepository, MessageRepository>();
+        services.AddScoped<IMessageService, MessageService>();
+        services.AddScoped<IChatService, ChatService>();
         //bg services
         services.AddHostedService<TempFileCleanupService>();
         services.AddHostedService<OldNotificationsCleanUpService>();

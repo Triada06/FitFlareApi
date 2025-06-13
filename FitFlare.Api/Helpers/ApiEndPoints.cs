@@ -89,4 +89,18 @@ public static class ApiEndPoints
         public const string View = $"{Base}/{{id}}/view";
         public const string AuthUserStories = $"{Base}";
     }
+
+    public static class Chat
+    {
+        private const string Base = $"{ApiBase}/chat";
+        public const string GetMessagesWithUser = $"{Base}/with/{{userId}}";
+        public const string LoadChats = $"{Base}";
+    }
+
+    public static class Message
+    {
+        private const string Base = $"{ApiBase}/message";
+        public const string Delete = $"{Base}/{{id}}";
+    }
+
 }
