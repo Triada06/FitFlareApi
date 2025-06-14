@@ -101,6 +101,7 @@ public static class ApiEndPoints
     {
         private const string Base = $"{ApiBase}/message";
         public const string Delete = $"{Base}/{{id}}";
+        public const string Search = $"{Base}";
     }
 
 }

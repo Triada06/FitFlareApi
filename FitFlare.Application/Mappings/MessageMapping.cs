@@ -16,4 +16,17 @@ public static class MessageMapping
             SentAt = message.CreatedAt,
         };
     }
+
+    public static SearchMessageDto MapToMessageSearchDto(this Message message, string chatName,
+        string? chatPictureSasUrl)
+    {
+        return new SearchMessageDto
+        {
+            SenderId = message.SenderId,
+            ReceiverId = message.ReceiverId,
+            MessageId = message.Id,
+            ChatName = chatName,
+            ChatPictureSasUri = chatPictureSasUrl
+        };
+    }
 }
