@@ -18,6 +18,7 @@ public static class ApiEndPoints
         public const string ChangePassword = $"{Base}/me/security/changepassword";
         public const string Search = $"{Base}/search";
         public const string Stories = $"{Base}/{{id}}/stories";
+        public const string ConfirmEmail = $"{Base}/{{userId}}/confirmemail";
     }
 
     public static class Post

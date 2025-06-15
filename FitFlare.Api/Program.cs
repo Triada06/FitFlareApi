@@ -45,7 +45,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins("http://localhost:5173")
+                .WithOrigins("https://localhost:5173")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials(); // crucial for SignalR with accessToken
@@ -105,7 +105,7 @@ builder.Services.AddIdentityCore<AppUser>(options =>
         options.Password.RequireUppercase = true;
         options.Password.RequiredLength = 8;
         options.Password.RequireNonAlphanumeric = false;
-
+        options.SignIn.RequireConfirmedEmail = true;
 
         options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
         options.User.RequireUniqueEmail = true;
@@ -121,7 +121,7 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequiredLength = 8;
     options.Password.RequireNonAlphanumeric = false;
-
+    options.SignIn.RequireConfirmedEmail = true;
     options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
     options.User.RequireUniqueEmail = true;
 });
@@ -132,6 +132,7 @@ var jwtSettings = config.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,

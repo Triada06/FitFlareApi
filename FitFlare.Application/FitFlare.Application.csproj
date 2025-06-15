@@ -12,6 +12,7 @@
 
     <ItemGroup>
       <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
+      <PackageReference Include="MailKit" Version="4.12.1" />
       <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.15" />
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="8.0.17" />

@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Net;
+using System.Security.Claims;
 using FitFlare.Api.Helpers;
 using FitFlare.Application.Contracts.Requests;
 using FitFlare.Application.DTOs.AppUser;
@@ -92,7 +93,7 @@ public class AppUserController(IAppUserService appUserService, IStoryService sto
         var data = await storyService.GetAllStoriesByUserId(id);
         return Ok(data);
     }
-    
+
 
     [HttpPost(ApiEndPoints.AppUser.VerifyPassword)]
     public async Task<IActionResult> VerifyPassword([FromBody] PasswordVerifyRequest passwordDto)
@@ -112,6 +113,12 @@ public class AppUserController(IAppUserService appUserService, IStoryService sto
             return Unauthorized();
         await appUserService.ChangePassword(userId, request);
         return Ok();
+    }
+    [AllowAnonymous]
+    [HttpGet(ApiEndPoints.AppUser.ConfirmEmail)]
+    public async Task<IActionResult> ConfirmEmail([FromRoute] string userId, string token)
+    {
+        return await appUserService.ConfirmEmail(userId, token) ? Ok() : BadRequest();
     }
 
     /*[AllowAnonymous]

@@ -24,5 +24,5 @@ public interface IAppUserService
     public Task ChangePrivacy(string userId);
     public Task<bool> VerifyPassword(string userId, string password);
     public Task<bool> ChangePassword(string userId,PasswordChangeRequest request);
-    
+    public Task<bool> ConfirmEmail(string userId, string token);
 }

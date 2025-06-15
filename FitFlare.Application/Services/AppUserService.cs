@@ -1,7 +1,9 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Linq.Expressions;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
+using System.Web;
 using FitFlare.Application.Contracts.Requests;
 using FitFlare.Application.Contracts.Responses;
 using FitFlare.Application.DTOs.AppUser;
@@ -25,7 +27,7 @@ public class AppUserService(
     UserManager<AppUser> userManager,
     IPostService postService,
     IPostSaveRepository postSaveRepository,
-    IPostLikeRepository postLikeRepository,
+    IEmailService emailService,
     IConfiguration config)
     : IAppUserService
 {
@@ -70,6 +72,17 @@ public class AppUserService(
         var res = await userManager.CreateAsync(user, appUser.PassWord);
         if (!res.Succeeded) throw new InternalServerErrorException("Failed to SignUp, try again later");
         await userManager.AddToRoleAsync(user, nameof(AppRoles.Member));
+
+        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+        var encodedToken = WebUtility.UrlEncode(token);
+
+        //frontend link 
+        var confirmationLink = $"https://localhost:5173/confirm-email?userId={user.Id}&token={encodedToken}";
+        var htmlMessage = $"<p>Click the link below to confirm your email:</p>" +
+                         $"<a href=\"{confirmationLink}\">{confirmationLink}</a>";
+
+        await emailService.SendAsync(user.Email!, "Confirm Your Email", htmlMessage);
+
         return new AuthResponse
         {
             ExpireTime = DateTime.UtcNow.AddDays(7),
@@ -83,7 +96,12 @@ public class AppUserService(
                    ?? await userManager.FindByNameAsync(appUserDto.EmailOrUserName);
         if (user is null)
             throw new InvalidLoginCredentialsException();
+        
+        if (!await userManager.IsEmailConfirmedAsync(user))
+            throw new BadRequestException("Please confirm your email before logging in");
+
         var result = await userManager.CheckPasswordAsync(user, appUserDto.PassWord);
+        
         if (!result)
             throw new InvalidLoginCredentialsException();
         return await GenerateJwtToken(user);
@@ -251,6 +269,15 @@ public class AppUserService(
         var result = await userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
         if (result.Succeeded) return true;
         throw new BadRequestException("Failed to change password, please try again later");
+    }
+
+    public async Task<bool> ConfirmEmail(string userId, string token)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null) throw new BadRequestException("User not found.");
+
+        var result = await userManager.ConfirmEmailAsync(user, token);
+        return result.Succeeded;
     }
 
     private async Task<string> GenerateJwtToken(AppUser user)
