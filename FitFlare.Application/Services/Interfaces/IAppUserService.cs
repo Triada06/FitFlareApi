@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using FitFlare.Application.Contracts.Requests;
 using FitFlare.Application.Contracts.Responses;
+using FitFlare.Application.DTOs.Account;
 using FitFlare.Application.DTOs.AppUser;
 using FitFlare.Core.Entities;
 using Microsoft.EntityFrameworkCore.Query;
@@ -25,4 +26,6 @@ public interface IAppUserService
     public Task<bool> VerifyPassword(string userId, string password);
     public Task<bool> ChangePassword(string userId,PasswordChangeRequest request);
     public Task<bool> ConfirmEmail(string userId, string token);
+    public Task<bool> ResetPassword(ResetPasswordDto request);
+    public Task ForgotPassword(ForgotPasswordDto forgotPassword);
 }

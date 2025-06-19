@@ -42,11 +42,9 @@ public static class ApiEndPoints
     {
         private const string Base = $"{ApiBase}/comment";
         public const string Create = $"{Base}";
-        public const string Update = $"{Base}/{{id}}";
         public const string Delete = $"{Base}/{{id}}";
         public const string GetById = $"{Base}/{{id}}";
         public const string GetByPostId = $"{Base}/post/{{postId}}";
-        public const string GetAll = $"{Base}";
         public const string AddReply = $"{Base}/{{commentId}}/addreply";
         public const string Replies = $"{Base}/{{parentCommentId}}/replies";
         public const string Like = $"{Base}/{{id}}/like";
@@ -105,4 +103,10 @@ public static class ApiEndPoints
         public const string Search = $"{Base}";
     }
 
+    public static class Account
+    {
+        private const string Base = $"{ApiBase}/account";
+        public const string ForgotPassword = $"{Base}/forgot-password";
+        public const string ResetPassword = $"{Base}/reset-password";
+    }
 }

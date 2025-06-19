@@ -6,6 +6,7 @@ using System.Text;
 using System.Web;
 using FitFlare.Application.Contracts.Requests;
 using FitFlare.Application.Contracts.Responses;
+using FitFlare.Application.DTOs.Account;
 using FitFlare.Application.DTOs.AppUser;
 using FitFlare.Application.Helpers.Exceptions;
 using FitFlare.Application.Mappings;
@@ -79,7 +80,7 @@ public class AppUserService(
         //frontend link 
         var confirmationLink = $"https://localhost:5173/confirm-email?userId={user.Id}&token={encodedToken}";
         var htmlMessage = $"<p>Click the link below to confirm your email:</p>" +
-                         $"<a href=\"{confirmationLink}\">{confirmationLink}</a>";
+                          $"<a href=\"{confirmationLink}\">{confirmationLink}</a>";
 
         await emailService.SendAsync(user.Email!, "Confirm Your Email", htmlMessage);
 
@@ -96,12 +97,12 @@ public class AppUserService(
                    ?? await userManager.FindByNameAsync(appUserDto.EmailOrUserName);
         if (user is null)
             throw new InvalidLoginCredentialsException();
-        
+
         if (!await userManager.IsEmailConfirmedAsync(user))
             throw new BadRequestException("Please confirm your email before logging in");
 
         var result = await userManager.CheckPasswordAsync(user, appUserDto.PassWord);
-        
+
         if (!result)
             throw new InvalidLoginCredentialsException();
         return await GenerateJwtToken(user);
@@ -278,6 +279,31 @@ public class AppUserService(
 
         var result = await userManager.ConfirmEmailAsync(user, token);
         return result.Succeeded;
+    }
+
+    public async Task<bool> ResetPassword(ResetPasswordDto request)
+    {
+        if (request.NewPassword != request.ConfirmPassword)
+            throw new BadRequestException("Passwords do not match.");
+        var user = await userManager.FindByEmailAsync(request.Email);
+        if (user is null)
+            throw new BadRequestException("Invalid email");
+        var result = await userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
+        return result.Succeeded;
+    }
+
+    public async Task ForgotPassword(ForgotPasswordDto forgotPassword)
+    {
+        var user = await userManager.FindByEmailAsync(forgotPassword.Email);
+        if (user is null || !await userManager.IsEmailConfirmedAsync(user))
+            return;
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        var encodedToken = WebUtility.UrlEncode(token);
+
+        // Send in link:
+        var url = $"https://localhost:5173/reset-password?email={user.Email}&token={encodedToken}";
+        await emailService.SendAsync(forgotPassword.Email, "Reset your password",
+            $"Click here to reset your password: <a href='{url}'>Reset</a>");
     }
 
     private async Task<string> GenerateJwtToken(AppUser user)
