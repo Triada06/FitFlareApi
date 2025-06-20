@@ -7,6 +7,7 @@ using System.Web;
 using FitFlare.Application.Contracts.Requests;
 using FitFlare.Application.Contracts.Responses;
 using FitFlare.Application.DTOs.Account;
+using FitFlare.Application.DTOs.Admin.UserDto;
 using FitFlare.Application.DTOs.AppUser;
 using FitFlare.Application.Helpers.Exceptions;
 using FitFlare.Application.Mappings;
@@ -29,6 +30,8 @@ public class AppUserService(
     IPostService postService,
     IPostSaveRepository postSaveRepository,
     IEmailService emailService,
+    IBanRepository banRepository,
+    IBanService banService,
     IConfiguration config)
     : IAppUserService
 {
@@ -97,7 +100,9 @@ public class AppUserService(
                    ?? await userManager.FindByNameAsync(appUserDto.EmailOrUserName);
         if (user is null)
             throw new InvalidLoginCredentialsException();
-
+        var isBanned = await banRepository.AnyAsync(b => b.AppUserId == user.Id);
+        if (isBanned)
+            throw new UserIsBannedException();
         if (!await userManager.IsEmailConfirmedAsync(user))
             throw new BadRequestException("Please confirm your email before logging in");
 
@@ -110,14 +115,13 @@ public class AppUserService(
 
     public async Task<bool> DeleteAsync(string userId)
     {
-        //TODO:FIX TS METHOD AFTER DEALING WITH ALL RELATED STUFF (FOLLOWERS,FOLLOWING,COMMENTS AND ETC.) OR PMO
         var user = await appUserRepository.GetByIdAsync(userId);
         if (user == null)
             throw new UserNotFoundException();
         if (!string.IsNullOrWhiteSpace(user.ProfilePictureUri))
             await blobService.DeleteBlobAsync(user.ProfilePictureUri);
-        var res = await userManager.DeleteAsync(user);
-        if (res.Succeeded) return true;
+        var res = await appUserRepository.DeleteAsync(user);
+        if (res) return true;
         throw new InternalServerErrorException("Failed to delete user");
     }
 
@@ -128,6 +132,7 @@ public class AppUserService(
     {
         var user = await appUserRepository.GetByIdAsync(id, i => i
                            .Include(m => m.Followers)
+                           .Include(m => m.Bans)
                            .Include(m => m.Following),
                        tracking)
                    ?? throw new UserNotFoundException();
@@ -156,6 +161,30 @@ public class AppUserService(
         return user.MapToAppUserDto(profilePicUri, orderedPosts, orderedSavedPostsDto);
     }
 
+    public async Task<ViewUserDto> GetSingleUser(string id)
+    {
+        var user = await appUserRepository.GetByIdAsync(id, i => i
+                       .Include(m => m.Followers)
+                       .Include(m => m.Following)
+                       .Include(m => m.Bans))
+                   ?? throw new UserNotFoundException();
+
+        var userPosts = await postService.FindAsync(p => p.UserId == user.Id && p.Status == "Published",
+            include: query => query
+                .Include(m => m.Tags)
+                .Include(m => m.LikedBy)
+                .Include(m => m.Comments)
+                .Include(m => m.SavedBy),
+            false, user.Id);
+
+        var bans = await banService.GetAllByUserId(id);
+
+        var profilePicUri = !string.IsNullOrWhiteSpace(user.ProfilePictureUri)
+            ? blobService.GetBlobSasUri(user.ProfilePictureUri)
+            : null;
+        return user.MapToViewUserDto(userPosts, bans, profilePicUri);
+    }
+
     public async Task<IEnumerable<AppUserDto>> GetAll(
         int page,
         string? sort,
@@ -166,6 +195,58 @@ public class AppUserService(
         Func<IQueryable<AppUser>, IQueryable<AppUser>>? includeFunc = null;
 
         includeFunc = query => query
+            .Include(au => au.Following)
+            .Include(au => au.Followers)
+            .Include(au => au.CommentLikes)
+            .Include(au => au.Comments)
+            .Include(au => au.Bans)
+            .Include(au => au.Followers)
+            .Include(au => au.Following);
+
+        var users = await appUserRepository.GetAllAsync(page, pageSize, tracking, includeFunc);
+        users = users.ToList();
+        if (!users.Any())
+            return [];
+
+        var sorted = !string.IsNullOrWhiteSpace(sort)
+            ? sort.Trim().ToLower() switch
+            {
+                "asc" => users.OrderBy(u => u.UserName),
+                "desc" => users.OrderByDescending(u => u.UserName),
+                _ => users
+            }
+            : users;
+
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            searchText = searchText.Trim();
+            sorted = sorted.Where(u =>
+                u.UserName != null &&
+                u.UserName.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            );
+        }
+
+        List<AppUserDto> rerDtos = [];
+
+        foreach (var user in sorted)
+        {
+            if (!string.IsNullOrWhiteSpace(user.ProfilePictureUri))
+            {
+                var uri = blobService.GetBlobSasUri(user.ProfilePictureUri);
+                rerDtos.Add(user.MapToAppUserDto(uri));
+            }
+            else rerDtos.Add(user.MapToAppUserDto());
+        }
+
+        return rerDtos;
+    }
+
+    public async Task<IEnumerable<AppUserDto>> GetAllUnBanned(int page, string? sort, int pageSize = 5,
+        bool tracking = true, string? searchText = null)
+    {
+        Func<IQueryable<AppUser>, IQueryable<AppUser>>? includeFunc = null;
+
+        includeFunc = query => query.Where(m => m.Bans.Count == 0)
             .Include(au => au.Following)
             .Include(au => au.Followers)
             .Include(au => au.CommentLikes)
@@ -237,8 +318,9 @@ public class AppUserService(
     public async Task<IEnumerable<AppUserContextDto?>> SearchAsync(string? searchText)
     {
         var data = await appUserRepository.FindAsync(m => searchText != null && m.UserName!.Contains(searchText),
+            i => i.Include(m => m.Bans),
             tracking: false);
-        return data.Select(m =>
+        return data .Where(m => m!.Bans.All(b => b.ExpiresAt <= DateTime.UtcNow)) .Select(m =>
             m?.MapToAppUserContextDto(m.ProfilePictureUri is not null
                 ? blobService.GetBlobSasUri(m.ProfilePictureUri)
                 : null));

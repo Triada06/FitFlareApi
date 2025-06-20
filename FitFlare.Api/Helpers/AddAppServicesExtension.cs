@@ -38,6 +38,8 @@ public static class AddAppServicesExtension
         services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IBanRepository, BanRepository>();
+        services.AddScoped<IBanService, BanService>();
         //bg services
         services.AddHostedService<TempFileCleanupService>();
         services.AddHostedService<OldNotificationsCleanUpService>();

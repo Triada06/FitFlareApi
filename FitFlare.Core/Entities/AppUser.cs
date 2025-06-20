@@ -7,7 +7,6 @@ public class AppUser : IdentityUser, IBaseEntity
     public string? FullName { get; set; }
     public string? ProfilePictureUri { get; set; }
     public string? Bio { get; set; }
-    public bool IsBanned { get; set; }
     public bool IsPrivate { get; set; }
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
 
@@ -21,4 +20,5 @@ public class AppUser : IdentityUser, IBaseEntity
     public ICollection<StoryView> Stories { get; set; } = [];
     public ICollection<Follow> Followers { get; set; } = []; // people following ME
     public ICollection<Follow> Following { get; set; } = []; // people I am following
+    public ICollection<Ban> Bans { get; set; } = [];
 }

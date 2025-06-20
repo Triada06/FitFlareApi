@@ -49,7 +49,7 @@ public class AppUserController(IAppUserService appUserService, IStoryService sto
         [FromQuery] int page)
     {
         if (page < 1) page = 1;
-        var data = await appUserService.GetAll(page, sort, 5, false, searchText);
+        var data = await appUserService.GetAllUnBanned(page, sort, 5, false, searchText);
         return Ok(data);
     }
 
@@ -64,7 +64,7 @@ public class AppUserController(IAppUserService appUserService, IStoryService sto
     public async Task<IActionResult> Delete([FromRoute] string id)
     {
         var res = await appUserService.DeleteAsync(id);
-        return Ok();
+        return res ? Ok() : BadRequest();
     }
 
     [HttpPut(ApiEndPoints.AppUser.EditProfile)]
@@ -114,6 +114,7 @@ public class AppUserController(IAppUserService appUserService, IStoryService sto
         await appUserService.ChangePassword(userId, request);
         return Ok();
     }
+
     [AllowAnonymous]
     [HttpGet(ApiEndPoints.AppUser.ConfirmEmail)]
     public async Task<IActionResult> ConfirmEmail([FromRoute] string userId, string token)

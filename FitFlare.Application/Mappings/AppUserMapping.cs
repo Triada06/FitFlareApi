@@ -1,4 +1,6 @@
-﻿using FitFlare.Application.DTOs.AppUser;
+﻿using FitFlare.Application.DTOs.Admin.UserDto;
+using FitFlare.Application.DTOs.AppUser;
+using FitFlare.Application.DTOs.Ban;
 using FitFlare.Application.DTOs.Chat;
 using FitFlare.Application.DTOs.Posts;
 using FitFlare.Core.Entities;
@@ -19,14 +21,14 @@ public static class AppUserMapping
             FullName = appUser.FullName,
             Bio = appUser.Bio,
             UserName = appUser.UserName!,
-            IsBanned = appUser.IsBanned,
+            IsBanned = appUser.Bans.Count != 0,
             IsPrivate = appUser.IsPrivate,
             PostsCount = appUser.Posts.Count,
             ProfilePictureUri = profilePictureUri ?? profilePictureUri,
             Posts = posts?.ToList() ?? [],
             SavedPosts = savedPosts?.ToList() ?? [],
-            FollowersCount = appUser.Followers.Count(m => m.FollowingId == appUser.Id),
-            FollowingCount = appUser.Following.Count(m => m.FollowerId == appUser.Id),
+            FollowersCount = appUser.Followers.Where(m=>m.Following.Bans.Count==0).Count(m => m.FollowingId == appUser.Id),
+            FollowingCount = appUser.Following.Where(m=>m.Follower.Bans.Count==0).Count(m => m.FollowerId == appUser.Id),
         };
     }
 
@@ -71,6 +73,24 @@ public static class AppUserMapping
             FullNameOrUserName = appUser.FullName ?? appUser.UserName!,
             LastMessage = null,
             LastMessageTime = lastMessageDate
+        };
+    }
+
+    public static ViewUserDto MapToViewUserDto(this AppUser appUser,
+        IEnumerable<PostDto?> posts, IEnumerable<BanDto?> bans, string? profilePictureUri = null)
+    {
+        return new ViewUserDto
+        {
+            Id = appUser.Id,
+            FullName = appUser.FullName,
+            ProfilePictureUri = profilePictureUri,
+            Bio = appUser.Bio,
+            FollowersCount = appUser.Followers.Count(m => m.FollowingId == appUser.Id),
+            FollowingCount = appUser.Following.Count(m => m.FollowerId == appUser.Id),
+            IsPrivate = appUser.IsPrivate,
+            CreatedAt = appUser.CreatedAt,
+            Posts = posts,
+            Bans = bans
         };
     }
 }

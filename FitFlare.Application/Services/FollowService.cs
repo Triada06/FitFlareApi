@@ -19,9 +19,10 @@ public class FollowService(
     public async Task<IEnumerable<AppUserContextDto>?> GetFollowersByIdFollowingId(string followingId)
     {
         var followers = await followRepository.FindAsync(m => m.FollowingId == followingId,
-            i => i.Include(m => m.Follower), tracking: false);
+            i => i.Include(m => m.Follower).ThenInclude(m => m.Bans), tracking: false);
         if (!followers.Any()) return [];
         return followers
+            .Where(m => m.Follower != null && m.Follower.Bans.Count == 0)
             .Select(m => m.MapFollowerToAppUserContextDto(m?.Follower.ProfilePictureUri is not null
                 ? blobService.GetBlobSasUri(m.Follower.ProfilePictureUri)
                 : null));
@@ -30,9 +31,10 @@ public class FollowService(
     public async Task<IEnumerable<AppUserContextDto>?> GetFollowingsByIdFollowerId(string followerId)
     {
         var followers = await followRepository.FindAsync(m => m.FollowerId == followerId,
-            i => i.Include(m => m.Following), tracking: false);
+            i => i.Include(m => m.Following).ThenInclude(m => m.Bans), tracking: false);
         if (!followers.Any()) return null;
         return followers
+            .Where(m => m.Following != null && m.Following.Bans.Count == 0)
             .Select(m => m.MapFollowingToAppUserContextDto(m?.Following.ProfilePictureUri is not null
                 ? blobService.GetBlobSasUri(m.Following.ProfilePictureUri)
                 : null));

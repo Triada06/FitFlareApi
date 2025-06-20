@@ -163,6 +163,22 @@ public class PostService(
         return await postRepository.DeleteAsync(userPost);
     }
 
+    public async Task<bool> TakeDownAsync(string postId)
+    {
+        var userPost = await postRepository.GetByIdAsync(postId, i => i.Include(m => m.Tags));
+        if (userPost == null)
+            throw new NotFoundException("post not found");
+
+        var postTags = userPost.Tags;
+        foreach (var tag in postTags)
+        {
+            tag.UsedCount--;
+        }
+
+        await tagRepository.UpdateRangeAsync(postTags);
+        return await postRepository.DeleteAsync(userPost);
+    }
+
     public async Task<PostDto?> GetByIdAsync(string id, string userId,
         Func<IQueryable<Post>, IIncludableQueryable<AppUser, object>>? include = null, bool tracking = true)
     {
@@ -453,13 +469,13 @@ public class PostService(
         var user = await appUserRepository.GetByIdAsync(userId);
         if (user is null)
             throw new UserNotFoundException();
-        var userFollowings = await followRepository.FindAsync(m => m.FollowerId == userId, tracking: false);
+        var userFollowings = await followRepository.FindAsync(m => m.FollowerId == userId && m.Follower.Bans.Count == 0, tracking: false);
         if (!userFollowings.Any())
             return [];
         List<PostDto?> posts = [];
         foreach (var userFollowing in userFollowings)
         {
-            var data = await FindAsync(m => m.UserId == userFollowing!.FollowingId && m.Status=="Published", i => i
+            var data = await FindAsync(m => m.UserId == userFollowing!.FollowingId && m.Status == "Published", i => i
                     .Include(m => m.Comments)
                     .Include(m => m.User)
                     .Include(m => m.LikedBy)
@@ -483,5 +499,24 @@ public class PostService(
         if (!listData.Any()) return;
         foreach (var item in listData)
             await postRepository.DeleteAsync(item!);
+    }
+
+    public async Task<IEnumerable<int>> GetMonthlyUploadedPosts()
+    {
+        var result = await postRepository
+            .FindAsync(p => p.Status == "Published", tracking: false);
+        if (!result.Any())
+            return [];
+
+        var sortedData = result.GroupBy(b => b!.CreatedAt.Month)
+            .Select(g => new { Month = g.Key, Count = g.Count() });
+        var data = new int[12];
+
+        foreach (var item in sortedData)
+        {
+            data[item.Month - 1] = item.Count;
+        }
+
+        return data;
     }
 }

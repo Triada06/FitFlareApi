@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FitFlare.Api.Controllers.AdminControllers;
 
 [ApiController]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Owner")]
 public class UserController(IAppUserService appUserService) : ControllerBase
 {
     [HttpGet(ApiEndPointsAdmin.AppUser.GetAll)]
@@ -18,6 +18,13 @@ public class UserController(IAppUserService appUserService) : ControllerBase
     {
         if (page < 1) page = 1;
         var data = await appUserService.GetAll(page, sort, pageSize, false, searchText);
+        return Ok(data);
+    }
+
+    [HttpGet(ApiEndPointsAdmin.AppUser.GetById)]
+    public async Task<IActionResult> GetById([FromRoute] string id)
+    {
+        var data = await appUserService.GetSingleUser(id);
         return Ok(data);
     }
 }

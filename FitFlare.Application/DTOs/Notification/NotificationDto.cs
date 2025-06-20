@@ -11,6 +11,7 @@ public class NotificationDto
     public string? TriggerUserProfilePicture { get; set; }
     public string? PostId { get; set; }
     public string? PostMediaUri { get; set; }
+    public string? DeletedComment { get; set; }
     public required DateTime CreatedAt { get; set; }
     public required bool IsRead { get; set; }
 }

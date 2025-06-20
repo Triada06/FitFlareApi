@@ -17,6 +17,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<PostSave> PostSaves { get; set; }
     public DbSet<StoryView> StoryViews { get; set; }
     public DbSet<Message> Messages { get; set; }
+    public DbSet<Ban> Bans { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -24,7 +25,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
 
         builder.Entity<StoryView>()
             .HasKey(sv => new { sv.UserId, sv.StoryId });
-        
+
         // Follow relationship
         builder.Entity<Follow>()
             .HasOne(f => f.Follower)
@@ -89,15 +90,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             .HasOne(n => n.TriggeredBy)
             .WithMany()
             .HasForeignKey(n => n.TriggeredById)
-            .OnDelete(DeleteBehavior.Restrict); 
-        
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Entity<Notification>()
             .HasOne(n => n.Post)
             .WithMany(p => p.Notifications)
             .HasForeignKey(n => n.PostId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        
+
         // Property constraints
         builder.Entity<Comment>()
             .Property(m => m.Content)
@@ -128,6 +129,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             .IsUnique();
         builder.Entity<Tag>()
             .Property(x => x.Name)
+            .HasMaxLength(50);
+        builder.Entity<Ban>()
+            .Property(x => x.Reason)
             .HasMaxLength(50);
     }
 }
