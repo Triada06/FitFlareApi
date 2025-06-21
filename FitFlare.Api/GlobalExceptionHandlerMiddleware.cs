@@ -52,6 +52,12 @@ public class GlobalExceptionHandlerMiddleware : IExceptionHandler
                 Detail = ex.Message,
                 Status = StatusCodes.Status404NotFound
             },
+            UserIsBannedException ex => new ProblemDetails
+            {
+                Title = "User is banned",
+                Detail = ex.Message,
+                Status = StatusCodes.Status403Forbidden
+            },  
             _ => new ProblemDetails
             {
                 Title = "Server Error",

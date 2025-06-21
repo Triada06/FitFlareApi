@@ -10,10 +10,12 @@ public static class BanMapping
     {
         return new BanDto
         {
+            Id = ban.Id,
             UserId = ban.AppUserId,
             Reason = ban.Reason,
             IsPermanent = ban.IsPermanent,
             ExpiresAt = ban.ExpiresAt,
+            BannedAt = ban.CreatedAt
         };
     }
 

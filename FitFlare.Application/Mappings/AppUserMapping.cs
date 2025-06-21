@@ -1,4 +1,5 @@
-﻿using FitFlare.Application.DTOs.Admin.UserDto;
+﻿using FitFlare.Application.DTOs.Admin.Admins;
+using FitFlare.Application.DTOs.Admin.UserDto;
 using FitFlare.Application.DTOs.AppUser;
 using FitFlare.Application.DTOs.Ban;
 using FitFlare.Application.DTOs.Chat;
@@ -91,6 +92,19 @@ public static class AppUserMapping
             CreatedAt = appUser.CreatedAt,
             Posts = posts,
             Bans = bans
+        };
+    }
+
+    public static AdminDto MapToAdminDto(this AppUser appUser, string? profilePictureUri = null)
+    {
+        return new AdminDto
+        {
+            Id = appUser.Id,
+            Role = "Admin",
+            FullName = appUser.FullName,
+            UserName = appUser.UserName!,
+            Email = appUser.Email!,
+            ProfilePictureSasUri = profilePictureUri
         };
     }
 }

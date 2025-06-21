@@ -320,7 +320,7 @@ public class AppUserService(
         var data = await appUserRepository.FindAsync(m => searchText != null && m.UserName!.Contains(searchText),
             i => i.Include(m => m.Bans),
             tracking: false);
-        return data .Where(m => m!.Bans.All(b => b.ExpiresAt <= DateTime.UtcNow)) .Select(m =>
+        return data.Where(m => m!.Bans.All(b => b.ExpiresAt <= DateTime.UtcNow)).Select(m =>
             m?.MapToAppUserContextDto(m.ProfilePictureUri is not null
                 ? blobService.GetBlobSasUri(m.ProfilePictureUri)
                 : null));

@@ -40,6 +40,7 @@ public static class AddAppServicesExtension
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IBanRepository, BanRepository>();
         services.AddScoped<IBanService, BanService>();
+        services.AddScoped<IAdminsService, AdminService>();
         //bg services
         services.AddHostedService<TempFileCleanupService>();
         services.AddHostedService<OldNotificationsCleanUpService>();
