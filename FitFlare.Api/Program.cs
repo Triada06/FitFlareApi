@@ -132,7 +132,23 @@ var jwtSettings = config.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+
+                // If the request is for our hub...
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    (path.StartsWithSegments("/hubs/call")))
+                {
+                    // Read the token out of the query string
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -171,7 +187,11 @@ app.UseAuthorization();
 app.UseHttpsRedirection();
 app.UseExceptionHandler();
 app.MapControllers();
+
+//websockets mapping
 app.MapHub<ChatHub>("/hubs/chat");
+app.MapHub<CallHub>("/hubs/call");
+
 
 app.Run();
 return;
