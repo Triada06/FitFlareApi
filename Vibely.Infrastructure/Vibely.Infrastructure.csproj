@@ -4,10 +4,11 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>FitFlare.Infrastructure</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\FitFlare.Core\FitFlare.Core.csproj" />
+      <ProjectReference Include="..\Vibely.Core\Vibely.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>

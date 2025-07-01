@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FitFlare.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250603053925_ProfilePrivacyInsertedToUserTable")]
-    partial class ProfilePrivacyInsertedToUserTable
+    [Migration("20250620211417_BanRelationFixed")]
+    partial class BanRelationFixed
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace FitFlare.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("FitFlare.Core.Entities.AppUser", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.AppUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -54,9 +54,6 @@ namespace FitFlare.Infrastructure.Migrations
                     b.Property<string>("FullName")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
-
-                    b.Property<bool>("IsBanned")
-                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsPrivate")
                         .HasColumnType("boolean");
@@ -109,7 +106,34 @@ namespace FitFlare.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.Comment", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.Ban", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AppUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppUserId");
+
+                    b.ToTable("Bans");
+                });
+
+            modelBuilder.Entity("Vibely.Core.Entities.Comment", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -122,15 +146,23 @@ namespace FitFlare.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("ParentCommentId")
+                        .HasColumnType("text");
+
                     b.Property<string>("PostId")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("RepliesCount")
+                        .HasColumnType("integer");
 
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentCommentId");
 
                     b.HasIndex("PostId");
 
@@ -139,7 +171,7 @@ namespace FitFlare.Infrastructure.Migrations
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.CommentLike", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.CommentLike", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -164,7 +196,7 @@ namespace FitFlare.Infrastructure.Migrations
                     b.ToTable("CommentLikes");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.Follow", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.Follow", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -190,7 +222,73 @@ namespace FitFlare.Infrastructure.Migrations
                     b.ToTable("Follows");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.Post", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.Message", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EncryptedContent")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReceiverId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("Vibely.Core.Entities.Notification", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TriggeredById")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("TriggeredById");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("Vibely.Core.Entities.Post", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -233,7 +331,7 @@ namespace FitFlare.Infrastructure.Migrations
                     b.ToTable("Posts");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.PostLike", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.PostLike", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("text");
@@ -251,7 +349,7 @@ namespace FitFlare.Infrastructure.Migrations
                     b.ToTable("PostLikes");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.PostSave", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.PostSave", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("text");
@@ -269,13 +367,17 @@ namespace FitFlare.Infrastructure.Migrations
                     b.ToTable("PostSaves");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.Story", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.Story", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("MediaUri")
                         .IsRequired()
@@ -285,10 +387,6 @@ namespace FitFlare.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string[]>("ViewerIds")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
@@ -296,7 +394,25 @@ namespace FitFlare.Infrastructure.Migrations
                     b.ToTable("Stories");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.Tag", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.StoryView", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("StoryId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("PostedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId", "StoryId");
+
+                    b.HasIndex("StoryId");
+
+                    b.ToTable("StoryViews");
+                });
+
+            modelBuilder.Entity("Vibely.Core.Entities.Tag", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -467,34 +583,52 @@ namespace FitFlare.Infrastructure.Migrations
                     b.ToTable("PostTags", (string)null);
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.Comment", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.Ban", b =>
                 {
-                    b.HasOne("FitFlare.Core.Entities.Post", "Post")
+                    b.HasOne("Vibely.Core.Entities.AppUser", "AppUser")
+                        .WithMany("Bans")
+                        .HasForeignKey("AppUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AppUser");
+                });
+
+            modelBuilder.Entity("Vibely.Core.Entities.Comment", b =>
+                {
+                    b.HasOne("Vibely.Core.Entities.Comment", "ParentComment")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentCommentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Vibely.Core.Entities.Post", "Post")
                         .WithMany("Comments")
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FitFlare.Core.Entities.AppUser", "User")
+                    b.HasOne("Vibely.Core.Entities.AppUser", "User")
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ParentComment");
 
                     b.Navigation("Post");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.CommentLike", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.CommentLike", b =>
                 {
-                    b.HasOne("FitFlare.Core.Entities.Comment", "Comment")
+                    b.HasOne("Vibely.Core.Entities.Comment", "Comment")
                         .WithMany("Likes")
                         .HasForeignKey("CommentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FitFlare.Core.Entities.AppUser", "User")
+                    b.HasOne("Vibely.Core.Entities.AppUser", "User")
                         .WithMany("CommentLikes")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -505,15 +639,15 @@ namespace FitFlare.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.Follow", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.Follow", b =>
                 {
-                    b.HasOne("FitFlare.Core.Entities.AppUser", "Follower")
+                    b.HasOne("Vibely.Core.Entities.AppUser", "Follower")
                         .WithMany("Following")
                         .HasForeignKey("FollowerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("FitFlare.Core.Entities.AppUser", "Following")
+                    b.HasOne("Vibely.Core.Entities.AppUser", "Following")
                         .WithMany("Followers")
                         .HasForeignKey("FollowingId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -524,9 +658,35 @@ namespace FitFlare.Infrastructure.Migrations
                     b.Navigation("Following");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.Post", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.Notification", b =>
                 {
-                    b.HasOne("FitFlare.Core.Entities.AppUser", "User")
+                    b.HasOne("Vibely.Core.Entities.Post", "Post")
+                        .WithMany("Notifications")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Vibely.Core.Entities.AppUser", "TriggeredBy")
+                        .WithMany()
+                        .HasForeignKey("TriggeredById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Vibely.Core.Entities.AppUser", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("TriggeredBy");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Vibely.Core.Entities.Post", b =>
+                {
+                    b.HasOne("Vibely.Core.Entities.AppUser", "User")
                         .WithMany("Posts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -535,15 +695,15 @@ namespace FitFlare.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.PostLike", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.PostLike", b =>
                 {
-                    b.HasOne("FitFlare.Core.Entities.Post", "Post")
+                    b.HasOne("Vibely.Core.Entities.Post", "Post")
                         .WithMany("LikedBy")
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FitFlare.Core.Entities.AppUser", "User")
+                    b.HasOne("Vibely.Core.Entities.AppUser", "User")
                         .WithMany("LikedPosts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -554,15 +714,15 @@ namespace FitFlare.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.PostSave", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.PostSave", b =>
                 {
-                    b.HasOne("FitFlare.Core.Entities.Post", "Post")
+                    b.HasOne("Vibely.Core.Entities.Post", "Post")
                         .WithMany("SavedBy")
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FitFlare.Core.Entities.AppUser", "User")
+                    b.HasOne("Vibely.Core.Entities.AppUser", "User")
                         .WithMany("SavedPosts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -573,13 +733,32 @@ namespace FitFlare.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.Story", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.Story", b =>
                 {
-                    b.HasOne("FitFlare.Core.Entities.AppUser", "User")
+                    b.HasOne("Vibely.Core.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Vibely.Core.Entities.StoryView", b =>
+                {
+                    b.HasOne("Vibely.Core.Entities.Story", "Story")
+                        .WithMany("Viewers")
+                        .HasForeignKey("StoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Vibely.Core.Entities.AppUser", "User")
                         .WithMany("Stories")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Story");
 
                     b.Navigation("User");
                 });
@@ -595,7 +774,7 @@ namespace FitFlare.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("FitFlare.Core.Entities.AppUser", null)
+                    b.HasOne("Vibely.Core.Entities.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -604,7 +783,7 @@ namespace FitFlare.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("FitFlare.Core.Entities.AppUser", null)
+                    b.HasOne("Vibely.Core.Entities.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -619,7 +798,7 @@ namespace FitFlare.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FitFlare.Core.Entities.AppUser", null)
+                    b.HasOne("Vibely.Core.Entities.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -628,7 +807,7 @@ namespace FitFlare.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("FitFlare.Core.Entities.AppUser", null)
+                    b.HasOne("Vibely.Core.Entities.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -637,21 +816,23 @@ namespace FitFlare.Infrastructure.Migrations
 
             modelBuilder.Entity("PostTag", b =>
                 {
-                    b.HasOne("FitFlare.Core.Entities.Post", null)
+                    b.HasOne("Vibely.Core.Entities.Post", null)
                         .WithMany()
                         .HasForeignKey("PostsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FitFlare.Core.Entities.Tag", null)
+                    b.HasOne("Vibely.Core.Entities.Tag", null)
                         .WithMany()
                         .HasForeignKey("TagsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.AppUser", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.AppUser", b =>
                 {
+                    b.Navigation("Bans");
+
                     b.Navigation("CommentLikes");
 
                     b.Navigation("Comments");
@@ -662,6 +843,8 @@ namespace FitFlare.Infrastructure.Migrations
 
                     b.Navigation("LikedPosts");
 
+                    b.Navigation("Notifications");
+
                     b.Navigation("Posts");
 
                     b.Navigation("SavedPosts");
@@ -669,18 +852,27 @@ namespace FitFlare.Infrastructure.Migrations
                     b.Navigation("Stories");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.Comment", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.Comment", b =>
                 {
                     b.Navigation("Likes");
+
+                    b.Navigation("Replies");
                 });
 
-            modelBuilder.Entity("FitFlare.Core.Entities.Post", b =>
+            modelBuilder.Entity("Vibely.Core.Entities.Post", b =>
                 {
                     b.Navigation("Comments");
 
                     b.Navigation("LikedBy");
 
+                    b.Navigation("Notifications");
+
                     b.Navigation("SavedBy");
+                });
+
+            modelBuilder.Entity("Vibely.Core.Entities.Story", b =>
+                {
+                    b.Navigation("Viewers");
                 });
 #pragma warning restore 612, 618
         }

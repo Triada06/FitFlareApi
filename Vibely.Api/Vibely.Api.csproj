@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <RootNamespace>FitFlare.Api</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -35,7 +36,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\FitFlare.Application\FitFlare.Application.csproj" />
+      <ProjectReference Include="..\Vibely.Application\Vibely.Application.csproj" />
     </ItemGroup>
 
     <ItemGroup>
