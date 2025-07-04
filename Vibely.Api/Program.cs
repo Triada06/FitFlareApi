@@ -36,6 +36,8 @@ builder.Services.Configure<BlobStorageOptions>(options =>
     options.ContainerName = Environment.GetEnvironmentVariable("BLOB_CONTAINER_NAME")
 );
 
+builder.Logging.AddConsole();
+
 // CORS Policy
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -45,10 +47,10 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins("https://localhost:5173")
+                .WithOrigins("https://vibely-client.vercel.app","https://localhost:5173")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-                .AllowCredentials(); // crucial for SignalR with accessToken
+                .AllowCredentials();
         });
 });
 
@@ -141,7 +143,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 // If the request is for our hub...
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) &&
-                    (path.StartsWithSegments("/hubs/call")))
+                    path.StartsWithSegments("api/hubs/call"))
                 {
                     // Read the token out of the query string
                     context.Token = accessToken;
@@ -171,7 +173,7 @@ var app = builder.Build();
 
 
 // Middleware
-app.UseCors(MyAllowSpecificOrigins); 
+app.UseCors(MyAllowSpecificOrigins);
 app.UseStaticFiles();
 app.UseRouting();
 
@@ -189,9 +191,10 @@ app.UseExceptionHandler();
 app.MapControllers();
 
 //websockets mapping
-app.MapHub<ChatHub>("/hubs/chat");
-app.MapHub<CallHub>("/hubs/call");
+app.MapHub<ChatHub>("api/hubs/chat");
+app.MapHub<CallHub>("api/hubs/call");
 
+app.MapGet("/healthcheck", () => TypedResults.Ok(new { hello = "World" }));
 
 app.Run();
 return;

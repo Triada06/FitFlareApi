@@ -28,7 +28,7 @@ public class CommentService(
         var comment = commentDto.MapToComment(userId);
         await commentRepository.CreateAsync(comment);
         var post = await postRepository.GetByIdAsync(comment.PostId);
-        if(post == null)
+        if (post == null)
             throw new NotFoundException("post not found");
         await notificationService.CreateAsync(new CreateNotificationRequest
         {

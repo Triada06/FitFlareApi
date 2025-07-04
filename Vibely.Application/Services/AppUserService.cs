@@ -80,8 +80,8 @@ public class AppUserService(
         var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
         var encodedToken = WebUtility.UrlEncode(token);
 
-        //frontend link 
-        var confirmationLink = $"https://localhost:5173/confirm-email?userId={user.Id}&token={encodedToken}";
+        //frontend link     
+        var confirmationLink = $"https://vibely-client.vercel.app/confirm-email?userId={user.Id}&token={encodedToken}";
         var htmlMessage = $"<p>Click the link below to confirm your email:</p>" +
                           $"<a href=\"{confirmationLink}\">{confirmationLink}</a>";
 
@@ -383,7 +383,7 @@ public class AppUserService(
         var encodedToken = WebUtility.UrlEncode(token);
 
         // Send in link:
-        var url = $"https://localhost:5173/reset-password?email={user.Email}&token={encodedToken}";
+        var url = $"https://vibely-client.vercel.app/reset-password?email={user.Email}&token={encodedToken}";
         await emailService.SendAsync(forgotPassword.Email, "Reset your password",
             $"Click here to reset your password: <a href='{url}'>Reset</a>");
     }

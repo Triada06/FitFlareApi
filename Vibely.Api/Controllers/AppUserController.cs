@@ -15,7 +15,7 @@ namespace FitFlare.Api.Controllers;
 
 [Authorize(Roles = "Member,Admin,Owner")]
 [ApiController]
-public class AppUserController(IAppUserService appUserService, IStoryService storyService) : ControllerBase
+public class AppUserController(IAppUserService appUserService, IStoryService storyService, RoleManager<IdentityRole> roleManager) : ControllerBase
 {
     [HttpGet(ApiEndPoints.AppUser.GetById)]
     public async Task<IActionResult> GetById([FromRoute] string id)
@@ -122,7 +122,7 @@ public class AppUserController(IAppUserService appUserService, IStoryService sto
         return await appUserService.ConfirmEmail(userId, token) ? Ok() : BadRequest();
     }
 
-    /*[AllowAnonymous]
+    [AllowAnonymous]
     [HttpPost("api/addroles")]
     public async Task<IActionResult> CreateRole()
     {
@@ -133,5 +133,5 @@ public class AppUserController(IAppUserService appUserService, IStoryService sto
         }
 
         return Ok();
-    }*/
+    }
 }

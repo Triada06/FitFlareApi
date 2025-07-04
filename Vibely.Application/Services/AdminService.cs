@@ -36,7 +36,7 @@ public class AdminService(
             throw new BadRequestException("Invalid target admin");
 
         var token = GenerateOwnerTransferToken(user.Id);
-        var confirmLink = $"https://localhost:5173/confirm-owner?token={Uri.EscapeDataString(token)}";
+        var confirmLink = $"https://vibely-client.vercel.app/confirm-owner?token={Uri.EscapeDataString(token)}";
 
         var message = $@"<p>You’ve been selected to become the new app owner.</p>
                      <p><a href='{confirmLink}'>Click here to confirm</a></p>";
