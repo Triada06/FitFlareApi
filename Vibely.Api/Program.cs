@@ -143,7 +143,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 // If the request is for our hub...
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) &&
-                    path.StartsWithSegments("api/hubs/call"))
+                    path.StartsWithSegments("/api/hubs/call") || path.StartsWithSegments("/hubs/call") || path.StartsWithSegments("/api/hubs/chat"))
                 {
                     // Read the token out of the query string
                     context.Token = accessToken;

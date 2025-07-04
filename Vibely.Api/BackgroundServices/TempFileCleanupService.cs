@@ -9,7 +9,7 @@ public class TempFileCleanupService(
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var tempPath = Path.Combine("temp");
+        var tempPath = Path.Combine(env.WebRootPath, "temp");
 
         while (!stoppingToken.IsCancellationRequested)
         {
